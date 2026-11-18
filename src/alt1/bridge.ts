@@ -5,6 +5,11 @@ export interface Alt1Api {
  rsWidth?: number;
  rsHeight?: number;
  version?: string;
+ rsLinked?: boolean;
+ maxtransfer?: number;
+ capture?: (x:number,y:number,w:number,h:number)=>Uint8ClampedArray;
+ bindRegion?: (x:number,y:number,w:number,h:number)=>number;
+ bindGetRegion?: (id:number,x:number,y:number,w:number,h:number)=>string;
 }
 declare global { interface Window { alt1?: Alt1Api } }
 export function getStatus(api:Alt1Api|undefined) {

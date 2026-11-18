@@ -2,3 +2,5 @@
 input:not([type=checkbox]){width:100%;padding:8px;margin:5px 0 10px;border:1px solid #647b84;background:#263f4c;color:#f5ead2;border-radius:5px;font:inherit}.catalog-results{max-height:250px;overflow:auto}.catalog-item{border-bottom:1px solid #3e5865;padding:6px 0;margin:0}.catalog-item button{width:auto;margin-left:10px}
 
 details{border-bottom:1px solid #3e5865;padding:10px 0}summary{cursor:pointer;color:#e4c783}
+
+.assistant{border-color:#c5a15c}.assistant canvas{width:100%;height:auto;display:block;border:1px solid #647b84;margin:8px 0}.assistant canvas[hidden]{display:none}button:disabled{opacity:.45;cursor:not-allowed}.advanced>summary{padding:12px}.advanced section{margin-top:10px}
