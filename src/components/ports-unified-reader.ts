@@ -34,7 +34,7 @@ export function mountUnifiedReader(root:HTMLElement){
  sec.innerHTML='<h2>Leer unidad seleccionada</h2><p>Selecciona una unidad en Crew Roster. Lee los atributos. El guardado local es opcional.</p><button>Leer unidad</button><label><input type="checkbox" class="auto-unit"> Lectura automática</label><p role="status" aria-live="polite"></p><dl class="unit-result"></dl><button class="copy-unit" disabled>Copiar resultado</button>';
  root.append(sec);
  const sync=mountVerifiedRoster(sec);
- const button=sec.querySelector('button')!,out=sec.querySelector('dl')!,status=sec.querySelector<HTMLElement>('[role=status]')!,copy=sec.querySelector<HTMLButtonElement>('.copy-unit')!;
+ const button=sec.querySelector('button')!,out=sec.querySelector('dl')!,status=sec.querySelector<HTMLElement>(':scope > [role=status]')!,copy=sec.querySelector<HTMLButtonElement>('.copy-unit')!;
  let report='',lastKey='',stableKey='',stableCount=0,busy=false;
  const auto=sec.querySelector<HTMLInputElement>('.auto-unit')!;
  async function run(automatic=false){
@@ -99,7 +99,7 @@ export function mountUnifiedReader(root:HTMLElement){
     const dt=document.createElement('dt'),dd=document.createElement('dd'),small=document.createElement('small');
     dt.textContent=r.label;dd.textContent=r.value??'Pendiente';dd.className=r.value===null?'pending':'valid';small.textContent=r.source;dd.append(document.createElement('br'),small);out.append(dt,dd);
    }
-   status.textContent='Casilla '+slot.id+' · '+complete+'/'+rows.length+' campos · '+Math.round(performance.now()-t)+' ms · Solo lectura';
+   status.textContent='Casilla '+slot.id+' · '+complete+'/'+rows.length+' campos · '+Math.round(performance.now()-t)+' ms · '+(sync.enabled.checked?'Sincronización activa':'Solo lectura');
    report=status.textContent+'\n'+rows.map(r=>r.label+': '+(r.value??'Pendiente')+' ['+r.source+']').join('\n')+'\n'+numericDebug.join('\n');copy.disabled=false;
   }catch(e){sync.pause();lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent=String(e)}finally{button.disabled=false;busy=false}
  }
