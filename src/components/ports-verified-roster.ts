@@ -1,3 +1,4 @@
+import {mountRosterManager} from './ports-roster-manager';
 import {overlayRect} from '../core/overlay-coordinates';
 import type {Slot} from '../core/crew-grid';
 import {readVerified,matchingRecords,saveVerified,observationFromRows,readingSignature,type ReadRow} from '../core/verified-roster';
@@ -12,15 +13,15 @@ export function mountVerifiedRoster(sec:HTMLElement){
  try{scaleSelect.value=localStorage.getItem('ports-helper.overlay-scale')??'auto';if(!scaleSelect.value)scaleSelect.value='auto';}catch{}
  function scale(){return scaleSelect.value==='auto'?(window.devicePixelRatio||1):Number(scaleSelect.value);}
  let previous='',slots:Slot[]=[],last:Snapshot|null=readVerified(localStorage);
+ const updateManager=mountRosterManager(list);
  const clear=()=>{try{window.alt1?.overLayClearGroup?.(GROUP)}catch{}};
  function render(){
   const records=matchingRecords(last,slots);const n=Object.keys(records).length;
-  progress.max=slots.length||24;progress.value=n;
-  count.textContent=slots.length?n+'/'+slots.length+' registros compatibles · verifica cada unidad':'Abre Crew Roster para comprobar el registro guardado.';
+  progress.max=slots.length||last?.grid.length||24;progress.value=slots.length?n:Object.keys(last?.records??{}).length;
+  count.textContent=slots.length?n+'/'+slots.length+' registros compatibles · verifica cada unidad':Object.keys(last?.records??{}).length+' registros locales · abre Crew Roster para comprobarlos';
   grid.replaceChildren();
-  for(const s of slots){const cell=document.createElement('span');cell.className=records[s.id]?'sync-done':'sync-pending';cell.textContent=s.id;cell.title=records[s.id]?.reading.name??'Pendiente';grid.append(cell);}
-  list.replaceChildren();
-  for(const [id,o] of Object.entries(last?.records??{})){const item=document.createElement('p');item.textContent=id+' · '+o.reading.name+' · Lv '+o.reading.level+' · '+[o.reading.morale,o.reading.combat,o.reading.seafaring,o.reading.speed].join('/')+' · '+(o.details?.traitsText??'')+' · barco '+(o.details?.assignedShip??'-');list.append(item);}
+  for(const s of (slots.length?slots:last?.grid??[])){const cell=document.createElement('span');cell.className=records[s.id]?'sync-done':'sync-pending';cell.textContent=s.id;cell.title=records[s.id]?.reading.name??'Pendiente';grid.append(cell);}
+  updateManager(last,!!slots.length&&n===Object.keys(last?.records??{}).length);
  }
  let drawnKey='',drawnAt=0;
  function draw(){

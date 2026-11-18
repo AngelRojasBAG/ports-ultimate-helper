@@ -32,10 +32,10 @@ export function loadSamples():Sample[]{
 }
 export function mountUnifiedReader(root:HTMLElement){
  const sec=document.createElement('section');
- sec.innerHTML='<h2>Leer unidad seleccionada</h2><p>Selecciona una unidad en Crew Roster. Lee los atributos. El guardado local es opcional.</p><button>Leer unidad</button><label><input type="checkbox" class="auto-unit"> Lectura automática</label><p role="status" aria-live="polite"></p><dl class="unit-result"></dl><button class="copy-unit" disabled>Copiar resultado</button>';
+ sec.innerHTML='<h2>Leer unidad seleccionada</h2><details class="reader-detail"><summary>Lectura y diagnóstico de unidad</summary><button>Leer unidad</button><label><input type="checkbox" class="auto-unit"> Lectura automática</label><p role="status" aria-live="polite"></p><dl class="unit-result"></dl><button class="copy-unit" disabled>Copiar resultado</button></details>';
  root.append(sec);
  const sync=mountVerifiedRoster(sec);
- const button=sec.querySelector('button')!,out=sec.querySelector('dl')!,status=sec.querySelector<HTMLElement>(':scope > [role=status]')!,copy=sec.querySelector<HTMLButtonElement>('.copy-unit')!;
+ const button=sec.querySelector<HTMLButtonElement>('.reader-detail > button')!,out=sec.querySelector('dl')!,status=sec.querySelector<HTMLElement>('.reader-detail > [role=status]')!,copy=sec.querySelector<HTMLButtonElement>('.copy-unit')!;
  let report='',lastKey='',stableKey='',stableCount=0,busy=false;
  const auto=sec.querySelector<HTMLInputElement>('.auto-unit')!;
  async function run(automatic=false){
