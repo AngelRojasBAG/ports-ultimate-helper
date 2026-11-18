@@ -12,12 +12,12 @@ export function inspectGrid(f:PixelFrame,a:RosterAnchor):Slot[]{
   let colorful=0;const sig:number[]=[];
   for(let iy=0;iy<8;iy++)for(let ix=0;ix<8;ix++){const [r,g,b]=rgb(f,cx+(ix-3.5)*3.4*s,cy+(iy-3.5)*3.4*s);if(Math.max(r,g,b)-Math.min(r,g,b)>45&&Math.max(r,g,b)>90)colorful++;sig.push((r>>5)*64+(g>>5)*8+(b>>5))}
   if(colorful<16)continue;
-  let score=0;
+  let score=0;let borderScore=0;
   for(const d of [-4,-3,-2,-1,0,1,2,3,4]){
    const hx=w/2+d*s,hy=h/2+d*s;
-   for(let edge=0;edge<4;edge++){let run=0,best=0;for(let k=0;k<25;k++){const t=(k/24-.5)*.76;const xx=edge<2?cx+t*w:cx+(edge===2?-hx:hx);const yy=edge<2?cy+(edge===0?-hy:hy):cy+t*h;const [r,g,b]=rgb(f,xx,yy);if(isSelectionYellow(r,g,b)){run++;best=Math.max(best,run)}else run=0}score=Math.max(score,best)}
+   for(let edge=0;edge<4;edge++){let run=0,best=0;for(let k=0;k<25;k++){const t=(k/24-.5)*.76;const xx=edge<2?cx+t*w:cx+(edge===2?-hx:hx);const yy=edge<2?cy+(edge===0?-hy:hy):cy+t*h;const [r,g,b]=rgb(f,xx,yy);if(isSelectionYellow(r,g,b)){run++;best=Math.max(best,run)}else run=0}score=Math.max(score,best);if(edge===1||edge===3)borderScore=Math.max(borderScore,best)}
   }
-  slots.push({id:row+':'+col,kind:col===0?'captain':'crew',x,y,w,h,selected:false,selectionScore:score,fingerprint:sig.join('.')});
+  slots.push({id:row+':'+col,kind:col===0?'captain':'crew',x,y,w,h,selected:false,selectionScore:col===0?borderScore:score,fingerprint:sig.join('.')});
  }
  const ranked=slots.slice().sort((a,b)=>(b.selectionScore??0)-(a.selectionScore??0));
  if(ranked[0]&&(ranked[0].selectionScore??0)>=10&&(ranked[0].selectionScore??0)-(ranked[1]?.selectionScore??0)>=5)ranked[0].selected=true;

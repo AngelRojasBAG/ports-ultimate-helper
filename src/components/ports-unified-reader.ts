@@ -47,7 +47,7 @@ export function mountUnifiedReader(root:HTMLElement){
    if(!engine?.readChar)throw Error('OCR no disponible.');
    const samples=loadSamples(),frame=captureGame(window.alt1),a=findRosterAnchor(frame);
    if(!a||a.scale!==1)throw Error('Abre Crew Roster a escala 100%.');
-   const slots=inspectGrid(frame,a),slot=selectedSlot(slots);if(!slot)throw Error('Selecciona una unidad inequívoca.');
+   const slots=inspectGrid(frame,a),slot=selectedSlot(slots);if(!slot){sync.reset();sync.refresh(slots);lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent='Selección ambigua · '+slots.map(s=>s.id+': '+s.selectionScore).join(' / ');return;}
    const t=performance.now();
    if(automatic&&!auto.checked)return;
    // Hash the complete panel, not just the slot, to detect changes in place.
