@@ -1,0 +1,2 @@
+# v0.4.35
+Measured from original 1920x1009 capture. Exact binary EDIT CREW and VOYAGE LIST anchors, 9-row digit templates for 0–7 from actual ship stats, exact name and id 1 templates, exact 5x5 RGB icon diagnostic samples. Does not automatically save, does not infer unobserved digits or names, no voyage percentages/duration reader yet. Ship parts are candidate labels only. Existing manual storage unchanged. No game actions.
