@@ -1,0 +1,2 @@
+# v0.3.10
+MERCHANT CE reported for visible MERCHANT. Separate title OCR from stats; use gold text segmentation and single-line recognition. Narrow the widened title crop to reduce edge artifacts. Keep exact catalog matching, 80% confidence and two stable readings. No guesses or automatic fuzzy mapping. Geometry and confidence not yet validated in live Alt1. Storage unchanged.
