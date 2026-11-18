@@ -1,9 +1,11 @@
 import {it,expect} from 'vitest';
-import {digitRows,createDigitFont,verifyDigit,readVerifiedNumber} from '../src/core/ports-digit-font';
+import {digitRows,createDigitFont,greenDigitRows,verifyDigit,readVerifiedNumber} from '../src/core/ports-digit-font';
 it('contains ten distinct measured glyph patterns',()=>{
  expect(Object.keys(digitRows)).toHaveLength(10);
  expect(new Set(Object.values(digitRows)).size).toBe(10);
- const font=createDigitFont();expect(font.chars).toHaveLength(10);
+ const font=createDigitFont();expect(font.chars).toHaveLength(10+Object.keys(greenDigitRows).length);
+ expect([...new Set(font.chars.map(c=>c.chr))].sort()).toEqual(Object.keys(digitRows).sort());
+ for(const [digit,rows] of Object.entries(greenDigitRows))expect(verifyDigit(rows)).toBe(digit);
  for(const [digit,rows] of Object.entries(digitRows))expect(verifyDigit(rows)).toBe(digit);
 });
 it('rejects invalid or ambiguous OCR outputs',()=>{
