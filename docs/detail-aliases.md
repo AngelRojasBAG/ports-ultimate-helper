@@ -1,0 +1,2 @@
+# v0.4.6
+Explicit OCR aliases based on three supplied live screenshots: MUtlNOUS, hisery Guts, Guick-Footed, Calfn, Personaiity. Exact vocabulary resolution remains preferred; unknown values rejected. No general fuzzy match. Preserve repetitions and existing storage. Live OCR confidence and unseen variants still require validation.
