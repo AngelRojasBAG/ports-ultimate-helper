@@ -1,0 +1,2 @@
+# v0.3.5
+Outer perimeter segment scoring instead of aggregate gold count; uniqueness margin required. Screenshot shows 20 crew and 4 captains, overlays render but old selection heuristic fails. Manual fallback: select game unit then matching app grid cell; two stable OCR readings and explicit confirmation, no automatic association in fallback. Experimental live validation required. No automated game input.
