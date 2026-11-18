@@ -61,10 +61,21 @@ const partLabels=[
  ['Hull of Storms',fromHex(90,'120000c000000000000,20801200010071000000000,20801200010101000000000,20909201c3c103c385ae70e,20909202210101044621010,3f9092040100c1080421090,20909204110031082421088,20909204110009082421082,20909204110009082421081,20919202210001044421081,208e9201c100e0c3842108c')]
  ]
 ] as const;
+// Allow slight background noise, but require strong agreement and separation from other labels.
+export function labelScore(a:Mask,b:Mask){
+ if(Math.abs(a.w-b.w)>5||Math.abs(a.h-b.h)>5)return 0;
+ let best=0;const na=a.bits.split('1').length-1,nb=b.bits.split('1').length-1;
+ for(let dy=-5;dy<=5;dy++)for(let dx=-5;dx<=5;dx++){
+ let overlap=0;for(let y=0;y<b.h;y++)for(let x=0;x<b.w;x++){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<a.w&&yy>=0&&yy<a.h&&b.bits[y*b.w+x]==='1'&&a.bits[yy*a.w+xx]==='1')overlap++;}
+ if(na+nb-overlap>0)best=Math.max(best,overlap/(na+nb-overlap));
+ }return best;
+}
 export function identifyPart(f:Frame,slot:number,dx:number,dy:number){
  const [x,y,w,h]=partBoxes[slot];const mask=crop(f,x+dx,y+dy,w,h,false,200);
  const matches=new Set(partLabels[slot].filter(([,m])=>same(mask,m)).map(([name])=>name));
- return matches.size===1?[...matches][0]:null;
+ if(matches.size===1)return [...matches][0];if(matches.size>1||!mask)return null;
+ const scores=new Map<string,number>();for(const [name,m] of partLabels[slot])scores.set(name,Math.max(scores.get(name)??0,labelScore(mask,m)));const ranked=[...scores].sort((a,b)=>b[1]-a[1]);
+ return ranked[0]&&ranked[0][1]>=.94&&ranked[0][1]-(ranked[1]?.[1]??0)>=.15?ranked[0][0]:null;
 }
 
 export function readShip(f:Frame){
