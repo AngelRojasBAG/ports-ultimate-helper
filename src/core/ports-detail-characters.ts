@@ -49,8 +49,8 @@ function readLine(mask:Mask,glyphs:Glyph[],engine:GlyphEngine):string|null{
  }
  return out||null;
 }
-export function readDetailCharacters(mask:Mask,samples:Sample[],kind:Kind,engine:GlyphEngine){
- const glyphs=trainDetailGlyphs(samples),lines=detailLines(mask,kind);
+export function readDetailCharacters(mask:Mask,samples:Sample[],kind:Kind,engine:GlyphEngine,trained?:Glyph[]){
+ const glyphs=trained??trainDetailGlyphs(samples),lines=detailLines(mask,kind);
  const read=lines.map(m=>readLine(m,glyphs,engine));
  const count=kind==='captain'?2:1;
  const traits=read.length>=count&&read.slice(0,count).every(Boolean)?read.slice(0,count).join('\n'):'';
