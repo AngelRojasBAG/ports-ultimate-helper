@@ -45,15 +45,19 @@ export function mountUnifiedReader(root:HTMLElement){
    await loadAlt1OCR();
    const engine=(window as Window&{OCR?:GlyphEngine&DigitEngine}).OCR;
    if(!engine?.readChar)throw Error('OCR no disponible.');
+   sync.clearOverlay();
+   // Give the overlay compositor time to remove our own frames before capture.
+   await new Promise<void>(resolve=>window.setTimeout(resolve,100));
+   if(automatic&&!auto.checked)return;
    const samples=loadSamples(),frame=captureGame(window.alt1),a=findRosterAnchor(frame);
    if(!a||a.scale!==1)throw Error('Abre Crew Roster a escala 100%.');
-   const slots=inspectGrid(frame,a),slot=selectedSlot(slots);if(!slot){sync.reset();sync.refresh(slots);lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent='Selección ambigua · '+slots.map(s=>s.id+': '+s.selectionScore).join(' / ');return;}
+   const slots=inspectGrid(frame,a),slot=selectedSlot(slots);if(!slot){sync.reset();sync.refresh(slots);lastKey='';stableKey='';stableCount=0;out.replaceChildren();status.textContent='Selección ambigua · '+slots.map(s=>s.id+': '+s.selectionScore).join(' / ');report=status.textContent;copy.disabled=false;return;}
    const t=performance.now();
    if(automatic&&!auto.checked)return;
    // Hash the complete panel, not just the slot, to detect changes in place.
    let hash=2166136261;for(let y=a.y+338;y<a.y+483;y++)for(let x=a.x-382;x<a.x-20;x++){const i=(y*frame.width+x)*4;hash=Math.imul(hash^frame.data[i]^frame.data[i+1]<<8^frame.data[i+2]<<16,16777619);}
    const key=slot.id+'/'+slot.fingerprint+'/'+hash;
-   if(automatic){if(key!==stableKey){stableKey=key;stableCount=1;sync.reset();return;}if(++stableCount<2)return;if(key===lastKey&&!sync.enabled.checked)return;}
+   if(automatic){if(key!==stableKey){stableKey=key;stableCount=1;sync.reset();return;}if(++stableCount<2)return;if(key===lastKey&&!sync.enabled.checked){sync.refresh(slots);return;}}
    if(automatic&&sync.enabled.checked&&key===lastKey&&stableCount>3){sync.refresh(slots);return;}
    lastKey=key;copy.disabled=true;out.replaceChildren();report='';
    const verifiedSamples=[...samples,...observedFields];

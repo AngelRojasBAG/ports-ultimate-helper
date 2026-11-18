@@ -27,7 +27,7 @@ export function mountVerifiedRoster(sec:HTMLElement){
   try{api.overLaySetGroup(GROUP);const records=matchingRecords(last,slots);for(const s of slots){const color=records[s.id]?0xff45cf78:0xff8090b0;const rect=overlayRect(s,scale());api.overLayRect?.(color|0,rect.x,rect.y,rect.w,rect.h,1500,1);}api.overLaySetGroup('');}catch{clear();}
  }
  render();overlay.onchange=()=>{if(!overlay.checked)clear();else draw();};scaleSelect.onchange=()=>{try{localStorage.setItem('ports-helper.overlay-scale',scaleSelect.value)}catch{};draw();};
- return {enabled,reset(){previous='';clear();},pause(){previous='';clear();status.textContent='Captura suspendida · registros conservados';},refresh(next:Slot[]){slots=next;render();draw();},accept(next:Slot[],slot:Slot,rows:ReadRow[]){
+ return {enabled,clearOverlay:clear,reset(){previous='';clear();},pause(){previous='';clear();status.textContent='Captura suspendida · registros conservados';},refresh(next:Slot[]){slots=next;render();draw();},accept(next:Slot[],slot:Slot,rows:ReadRow[]){
   slots=next;if(!enabled.checked){previous='';render();return;}
   const o=observationFromRows(slot,rows);if(!o){previous='';status.textContent='Lectura incompleta: registro anterior conservado.';render();draw();return;}
   const signature=JSON.stringify([next.map(s=>[s.id,s.kind,s.fingerprint]),slot.id,readingSignature(o)]);
