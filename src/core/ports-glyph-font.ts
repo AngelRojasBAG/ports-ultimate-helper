@@ -22,13 +22,11 @@ export function splitGlyphs(field:GlyphField,mask:Mask):{mask:Mask;gap:number}[]
   if(runs.length<6||runs[4].x!==34||runs[4].w!==2||runs[5].x!==42)return [];
   return runs.slice(5).map((r,i)=>({mask:slice(mask,r.x,0,r.w,11),gap:i?r.x-runs[4+i].x-runs[4+i].w:0}));
  }
- // The title uses a ten-pixel body; isolated pixels in rows 10 and 11
- // are suffix noise in the exported masks. J has a stable two-column body
- // in these samples, so retain it rather than assuming a serif font.
+ // Preserve the descender: the real J is identical to I in the first 10 rows.
  if(mask.h<10||mask.h>12)return [];
- const body=slice(mask,0,0,mask.w,10);
+ const body:Mask={w:mask.w,h:12,bits:mask.bits.padEnd(mask.w*12,'0')};
  const runs=columns(body);
- return runs.map((r,i)=>({mask:slice(body,r.x,0,r.w,10),gap:i?r.x-runs[i-1].x-runs[i-1].w:0}));
+ return runs.map((r,i)=>({mask:slice(body,r.x,0,r.w,12),gap:i?r.x-runs[i-1].x-runs[i-1].w:0}));
 }
 export function trainGlyphs(samples:Sample[],field:GlyphField):Glyph[]{
  const map=new Map<string,Glyph>();const conflicts=new Set<string>();

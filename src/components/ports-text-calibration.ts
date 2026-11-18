@@ -1,3 +1,4 @@
+import {readDetailLines} from '../core/ports-detail-lines';
 import {trainGlyphs,decodeGlyphs,type GlyphEngine} from '../core/ports-glyph-font';
 import {loadAlt1OCR} from './alt1-ocr-lab';
 import {captureGame} from '../alt1/capture';
@@ -13,7 +14,7 @@ const regions:{field:Field;label:string;dx:number;dy:number;w:number;h:number}[]
 ];
 export function mountTextCalibration(root:HTMLElement){
  const sec=document.createElement('section');sec.className='assistant';
- sec.innerHTML='<h2>Calibración de texto · Ports</h2><p>Selecciona una unidad y captura sus campos. Si no hay coincidencia exacta, transcribe el recorte para enseñar ese patrón. No modifica el registro de tripulación.</p><button id="pt-capture">Capturar campos</button><p id="pt-status" role="status"></p><div id="pt-fields"></div><button id="pt-export">Exportar patrones</button><label>Importar patrones<input id="pt-import" type="file" accept=".json"></label>';
+ sec.innerHTML='<h2>Calibración de texto · Ports</h2><p>Selecciona una unidad y captura sus campos. Si no hay coincidencia exacta, transcribe el recorte para enseñar ese patrón. No modifica el registro de tripulación.</p><button id="pt-capture">Capturar campos</button><p id="pt-status" role="status"></p><div id="pt-fields"></div><button id="pt-copy">Copiar diagnóstico</button><button id="pt-export">Exportar patrones</button><label>Importar patrones<input id="pt-import" type="file" accept=".json"></label>';
  root.append(sec);
  const status=sec.querySelector<HTMLElement>('#pt-status')!,fields=sec.querySelector<HTMLElement>('#pt-fields')!;
  let samples:Sample[]=[];
@@ -54,11 +55,22 @@ export function mountTextCalibration(root:HTMLElement){
      const unseen=decodeGlyphs(r.field,mask,independent,engine);
      const report=document.createElement('p');report.textContent='Alt1 caracteres: '+(read??'Pendiente')+' · Prueba sin etiqueta actual: '+(unseen??'Pendiente')+' · Cobertura: '+[...new Set(glyphs.map(g=>g.chr))].sort().join(' ');block.append(report);
     }
+    if(r.field==='details'){
+     const d=readDetailLines(mask,samples,slot.kind);
+     const report=document.createElement('p');
+     report.textContent='Traits por líneas (patrón): '+(d.traitsText??'Pendiente')+' · Personalidad: '+(slot.kind==='captain'?(d.personality??'Pendiente'):'No aplica')+' · Similitud: '+d.results.map(q=>q?Math.round(q.score*100)+'%':'—').join(' / ');
+     block.append(report);
+    }
     const input=document.createElement('textarea');input.rows=r.field==='details'?3:1;input.value=value??'';input.placeholder=r.field==='level'?'Solo el número':r.field==='ship'?'1, 2, 3, 4 o -':'Transcribe el recorte';block.append(input);
     const save=document.createElement('button');save.textContent='Registrar patrón';save.onclick=()=>{try{const text=input.value.trim();persist(addSample(samples,{field:r.field,text,mask}));result.textContent='Patrón registrado: '+text;status.textContent=samples.length+' patrones locales.';}catch(e){status.textContent=String(e)}};block.append(save);fields.append(block);
    }
    status.textContent='Casilla '+slot.id+' · '+samples.length+' patrones locales · Sin escribir en tripulación.';
   }catch(e){status.textContent=String(e)}
+ };
+ sec.querySelector<HTMLButtonElement>('#pt-copy')!.onclick=async()=>{
+  const report=status.textContent+'\n'+Array.from(fields.querySelectorAll('p')).map(el=>el.textContent).join('\n');
+  try{await navigator.clipboard.writeText(report);status.textContent='Diagnóstico copiado.';}
+  catch{const box=document.createElement('textarea');box.value=report;box.rows=12;fields.append(box);box.select();}
  };
  sec.querySelector<HTMLButtonElement>('#pt-export')!.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(samples)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='ports-text-patterns.json';a.click();window.setTimeout(()=>URL.revokeObjectURL(url),30000)};
  const file=sec.querySelector<HTMLInputElement>('#pt-import')!;file.onchange=async()=>{try{const f=file.files?.[0];if(!f)return;if(f.size>20000000)throw Error('Archivo demasiado grande.');let next=samples;for(const a of decode(await f.text()))next=addSample(next,a);persist(next);status.textContent=samples.length+' patrones importados y locales.';}catch(e){status.textContent=String(e)}finally{file.value=''}};

@@ -13,3 +13,12 @@ it('rejects inconsistent labels and wrong character count',()=>{
  expect(fontForGlyphs(glyphs,1).chars[0].pixels.length).toBe(12);
  expect(trainGlyphs([...samples,{field:'ship',text:'1',mask}],'ship')).toEqual([]);
 });
+
+it('distinguishes actual I and J using the descender rows',()=>{
+ const i={w:2,h:10,bits:'11'.repeat(10)};
+ const j={w:2,h:12,bits:'11'.repeat(10)+'1010'};
+ const learned=trainGlyphs([{field:'title',text:'I',mask:i},{field:'title',text:'J',mask:j}],'title');
+ expect(learned.map(g=>g.chr)).toEqual(['I','J']);
+ expect(learned[0].mask.bits).not.toEqual(learned[1].mask.bits);
+ expect(learned[0].mask.h).toBe(12);
+});
