@@ -1,3 +1,4 @@
+import {parseDetails,resolveDetailPasses} from '../core/unit-details';
 import {createWorker,PSM,type Worker} from 'tesseract.js';
 import type {RosterAnchor} from '../core/roster-anchor';
 let workerPromise:Promise<Worker>|undefined;
@@ -26,7 +27,7 @@ export async function readPanel(frame:ImageData,a:RosterAnchor){const r=panelBou
  const name=nameResult.data.text.trim().replace(/\s+/g,' ');
  return {text:name+'\n'+res.data.text,confidence:Math.min(nameResult.data.confidence,res.data.confidence),preview:out};}
 
-export async function readDetails(frame:ImageData,a:RosterAnchor){
+export async function readDetails(frame:ImageData,a:RosterAnchor,kind:'crew'|'captain'='crew'){
  const src=document.createElement('canvas');src.width=frame.width;src.height=frame.height;src.getContext('2d')!.putImageData(frame,0,0);
  function crop(dx:number,dy:number,w:number,h:number){const x=Math.round(a.x+dx*a.scale),y=Math.round(a.y+dy*a.scale),ww=Math.round(w*a.scale),hh=Math.round(h*a.scale);if(x<0||y<0||x+ww>frame.width||y+hh>frame.height)throw Error('Detalle fuera de pantalla.');const c=document.createElement('canvas');c.width=ww*4;c.height=hh*4;c.getContext('2d')!.drawImage(src,x,y,ww,hh,0,0,c.width,c.height);return c;}
  const w=await getWorker();
@@ -36,6 +37,16 @@ export async function readDetails(frame:ImageData,a:RosterAnchor){
  for(let i=0;i<image.data.length;i+=4){const r=image.data[i],g=image.data[i+1],b=image.data[i+2];const ink=Math.min(r,g,b)>120&&Math.max(r,g,b)-Math.min(r,g,b)<65;image.data[i]=image.data[i+1]=image.data[i+2]=ink?0:255;image.data[i+3]=255;}
  tc.putImageData(image,0,0);
  const trait=await w.recognize(clean);
+ const passes=[{text:trait.data.text,confidence:trait.data.confidence}];
+ const first=parseDetails('',trait.data.text,kind);
+ if(trait.data.confidence<75||!first.traitsText||(kind==='captain'&&!first.personality)){
+  const fallback=await w.recognize(original);
+  passes.push({text:fallback.data.text,confidence:fallback.data.confidence});
+  const contrast=document.createElement('canvas');contrast.width=original.width;contrast.height=original.height;
+  const cc=contrast.getContext('2d')!;cc.drawImage(original,0,0);const im=cc.getImageData(0,0,contrast.width,contrast.height);
+  for(let i=0;i<im.data.length;i+=4){const v=Math.min(im.data[i],im.data[i+1],im.data[i+2]);const gray=Math.max(0,Math.min(255,255-(v-45)*1.7));im.data[i]=im.data[i+1]=im.data[i+2]=gray;im.data[i+3]=255;}cc.putImageData(im,0,0);
+  const third=await w.recognize(contrast);passes.push({text:third.data.text,confidence:third.data.confidence});
+ }
  await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_LINE});
  try{
  const marker=crop(-382,338,24,20);
@@ -47,6 +58,7 @@ export async function readDetails(frame:ImageData,a:RosterAnchor){
  const ww=maxX-minX+1,hh=maxY-minY+1;
  const dash=count>0&&ww>=8*a.scale&&ww<=32*a.scale&&hh>=2*a.scale&&hh<=12*a.scale&&ww/hh>=2&&count/(ww*hh)>.35&&minX>0&&minY>0&&maxX<marker.width-1&&maxY<marker.height-1;
  const assignment=dash?null:await w.recognize(marker);
- return {traits:trait.data.confidence>=75?trait.data.text:'',assignment:dash?'-':assignment&&assignment.data.confidence>=75?assignment.data.text:'',rawTraits:trait.data.text,rawAssignment:dash?'-':assignment?.data.text??''};
+ const markerText=dash?'-':assignment&&assignment.data.confidence>=75?assignment.data.text:'';
+ return {details:resolveDetailPasses(markerText,passes,kind),rawTraits:passes.map(p=>Math.round(p.confidence)+'%: '+p.text.trim()).join('\n---\n'),rawAssignment:dash?'-':assignment?.data.text??''};
  }finally{await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_BLOCK});}
 }

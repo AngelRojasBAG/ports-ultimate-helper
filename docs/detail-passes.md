@@ -1,0 +1,2 @@
+# v0.4.7
+Raw OCR was shown regardless of confidence, while the parser received empty text below 75. Parse every pass against existing vocabulary, try original and grayscale contrast variants only when needed, accept one validated >=75 or two matching validated >=45 passes, reject conflicting recognized fields. Confidence floors are experimental and correlated preprocessing passes are not independent evidence of correctness. Display confidence per pass for diagnosis. Assignment and basic OCR validation unchanged; no storage reset. Live test required.
