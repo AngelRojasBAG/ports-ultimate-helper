@@ -1,3 +1,4 @@
+import {readCaptainDetails} from '../core/ports-captain-details';
 import {mountVerifiedRoster} from './ports-verified-roster';
 import {observedFields} from '../core/ports-observed-fields';
 import {titleSeeds} from '../core/ports-title-seeds';
@@ -40,14 +41,11 @@ export function mountUnifiedReader(root:HTMLElement){
  async function run(automatic=false){
   if(busy)return;
   busy=true;
-  button.disabled=true;if(!automatic)status.textContent='Cargando Alt1…';
+  if(!automatic)button.disabled=true;if(!automatic)status.textContent='Cargando Alt1…';
   try{
    await loadAlt1OCR();
    const engine=(window as Window&{OCR?:GlyphEngine&DigitEngine}).OCR;
    if(!engine?.readChar)throw Error('OCR no disponible.');
-   sync.clearOverlay();
-   // Give the overlay compositor time to remove our own frames before capture.
-   await new Promise<void>(resolve=>window.setTimeout(resolve,100));
    if(automatic&&!auto.checked)return;
    const samples=loadSamples(),frame=captureGame(window.alt1),a=findRosterAnchor(frame);
    if(!a||a.scale!==1)throw Error('Abre Crew Roster a escala 100%.');
@@ -88,15 +86,17 @@ export function mountUnifiedReader(root:HTMLElement){
    const full=mask?readFullCrewTrait(mask,samples,slot.kind):null;
    const dual=slot.kind==='crew'?readDualTrait(traitRows(frame,a.x-315,a.y+436,270,47),loadTraitSamples(),engine):null;
    if(dual)numericDebug.push('Traits OCR 90/110: '+dual.results.map(q=>q.threshold+'='+ (q.value??'Pendiente')).join(' / '));
-   const lines=mask?readDetailLines(mask,samples,slot.kind):null;
+   const lines=mask?readDetailLines(mask,verifiedSamples,slot.kind):null;
    const exact=mask?matchSample(verifiedSamples,'details',mask):null;
    const known=exact?parseDetails('',exact,slot.kind):null;
+   const captain=slot.kind==='captain'?readCaptainDetails(mask,verifiedSamples):null;
    for(const [key,label] of [['traitsText','Traits'],['personality','Personalidad']] as const){
     if(key==='personality'&&slot.kind==='crew')continue;
-    const values=[independent?.[key],key==='traitsText'?full?.traitsText:null,key==='traitsText'?dual?.value:null,lines?.[key],known?.[key]].filter((v):v is string=>!!v);
+    const values=[independent?.[key],captain?.[key],key==='traitsText'?full?.traitsText:null,key==='traitsText'?dual?.value:null,lines?.[key],known?.[key]].filter((v):v is string=>!!v);
     const conflict=new Set(values.map(v=>v.toLowerCase())).size>1;
-    push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':key==='traitsText'&&dual?.value?(dual.method==='characters'?'Alt1 caracteres 90+110':'Patrón verificado 90+110'):known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
+    push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':key==='traitsText'&&dual?.value?(dual.method==='characters'?'Alt1 caracteres 90+110':'Patrón verificado 90+110'):captain?.[key]?'Patrón de capitán':known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
    }
+   if(slot.kind==='captain'&&mask&&rows.some(r=>r.value===null))numericDebug.push('Detalles máscara '+mask.w+'x'+mask.h+' · '+mask.bits);
    if(automatic&&sync.enabled.checked)sync.accept(slots,slot,rows);else sync.refresh(slots);
    const complete=rows.filter(r=>r.value!==null).length;
    for(const r of rows){
@@ -105,7 +105,7 @@ export function mountUnifiedReader(root:HTMLElement){
    }
    status.textContent='Casilla '+slot.id+' · '+complete+'/'+rows.length+' campos · '+Math.round(performance.now()-t)+' ms · '+(sync.enabled.checked?'Sincronización activa':'Solo lectura');
    report=status.textContent+'\n'+rows.map(r=>r.label+': '+(r.value??'Pendiente')+' ['+r.source+']').join('\n')+'\n'+numericDebug.join('\n');copy.disabled=false;
-  }catch(e){sync.pause();lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent=String(e)}finally{button.disabled=false;busy=false}
+  }catch(e){sync.pause();lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent=String(e)}finally{if(!automatic)button.disabled=false;busy=false}
  }
  button.onclick=()=>void run();
  let timer:number|undefined;

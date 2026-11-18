@@ -22,12 +22,16 @@ export function mountVerifiedRoster(sec:HTMLElement){
   list.replaceChildren();
   for(const [id,o] of Object.entries(last?.records??{})){const item=document.createElement('p');item.textContent=id+' · '+o.reading.name+' · Lv '+o.reading.level+' · '+[o.reading.morale,o.reading.combat,o.reading.seafaring,o.reading.speed].join('/')+' · '+(o.details?.traitsText??'')+' · barco '+(o.details?.assignedShip??'-');list.append(item);}
  }
+ let drawnKey='',drawnAt=0;
  function draw(){
-  clear();scaleInfo.textContent='DPI navegador: '+window.devicePixelRatio+' · divisor aplicado: '+scale();const api=window.alt1;if(!overlay.checked||!enabled.checked||!api?.permissionOverlay||!api.overLaySetGroup)return;
-  try{api.overLaySetGroup(GROUP);const records=matchingRecords(last,slots);for(const s of slots){const color=records[s.id]?0xff45cf78:0xff8090b0;const rect=overlayRect(s,scale());api.overLayRect?.(color|0,rect.x,rect.y,rect.w,rect.h,1500,1);}api.overLaySetGroup('');}catch{clear();}
+  scaleInfo.textContent='DPI navegador: '+window.devicePixelRatio+' · divisor aplicado: '+scale();const api=window.alt1;if(!overlay.checked||!enabled.checked||!api?.permissionOverlay||!api.overLaySetGroup){clear();drawnKey='';return;}
+  const signature=JSON.stringify([scale(),slots.map(s=>[s.id,s.x,s.y,s.w,s.h,!!matchingRecords(last,slots)[s.id]])]);
+  if(signature===drawnKey&&performance.now()-drawnAt<2400)return;
+  clear();drawnKey=signature;drawnAt=performance.now();
+  try{api.overLaySetGroup(GROUP);const records=matchingRecords(last,slots);for(const s of slots){const color=records[s.id]?0xff45cf78:0xff8090b0;const rect=overlayRect(s,scale());api.overLayRect?.(color|0,rect.x,rect.y,rect.w,rect.h,3200,1);}api.overLaySetGroup('');}catch{clear();}
  }
- render();overlay.onchange=()=>{if(!overlay.checked)clear();else draw();};scaleSelect.onchange=()=>{try{localStorage.setItem('ports-helper.overlay-scale',scaleSelect.value)}catch{};draw();};
- return {enabled,clearOverlay:clear,reset(){previous='';clear();},pause(){previous='';clear();status.textContent='Captura suspendida · registros conservados';},refresh(next:Slot[]){slots=next;render();draw();},accept(next:Slot[],slot:Slot,rows:ReadRow[]){
+ render();overlay.onchange=()=>{drawnKey='';if(!overlay.checked)clear();else draw();};scaleSelect.onchange=()=>{try{localStorage.setItem('ports-helper.overlay-scale',scaleSelect.value)}catch{};draw();};
+ return {enabled,clearOverlay:clear,reset(){previous='';},pause(){previous='';clear();drawnKey='';status.textContent='Captura suspendida · registros conservados';},refresh(next:Slot[]){slots=next;render();draw();},accept(next:Slot[],slot:Slot,rows:ReadRow[]){
   slots=next;if(!enabled.checked){previous='';render();return;}
   const o=observationFromRows(slot,rows);if(!o){previous='';status.textContent='Lectura incompleta: registro anterior conservado.';render();draw();return;}
   const signature=JSON.stringify([next.map(s=>[s.id,s.kind,s.fingerprint]),slot.id,readingSignature(o)]);
