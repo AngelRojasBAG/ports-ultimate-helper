@@ -1,0 +1,2 @@
+# v0.3.11
+User screenshot shows Storm Riders Clansman level 7, Morale 0, Combat -10, Seafaring 860, Speed 0. Preserve signed integer unit statistics through OCR parsing, snapshot validation and manual roster validation. Level restrictions remain unchanged. Same local storage keys; no reset. Trait reading and final voyage formula validation are unchanged. Live validation pending.

@@ -7,7 +7,7 @@ export interface Snapshot {records:Records;grid:{id:string;kind:Slot['kind'];fin
 export function validObservation(v:unknown):v is Observation {
  if(!v||typeof v!=='object')return false;
  const o=v as Observation,r=o.reading;
- return (o.kind==='crew'||o.kind==='captain')&&typeof o.fingerprint==='string'&&o.fingerprint.length>0&&typeof o.observedAt==='string'&&!!r&&typeof r.name==='string'&&r.name.trim().length>2&&(o.kind==='captain'||knownCrewName(r.name))&&Number.isInteger(r.level)&&r.level>=0&&r.level<=10&&[r.morale,r.combat,r.seafaring,r.speed].every(n=>Number.isSafeInteger(n)&&n>=0);
+ return (o.kind==='crew'||o.kind==='captain')&&typeof o.fingerprint==='string'&&o.fingerprint.length>0&&typeof o.observedAt==='string'&&!!r&&typeof r.name==='string'&&r.name.trim().length>2&&(o.kind==='captain'||knownCrewName(r.name))&&Number.isInteger(r.level)&&r.level>=0&&r.level<=10&&[r.morale,r.combat,r.seafaring,r.speed].every(n=>Number.isSafeInteger(n));
 }
 export function sanitize(v:unknown):Records{
  if(!v||typeof v!=='object'||Array.isArray(v))return {};
