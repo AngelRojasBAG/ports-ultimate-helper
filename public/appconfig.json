@@ -10,7 +10,7 @@
   "minHeight": 360,
   "maxWidth": 1000,
   "maxHeight": 1200,
-  "permissions": "pixel,gamestate",
+  "permissions": "pixel,gamestate,overlay",
   "requestHandlers": [],
   "activators": []
 }

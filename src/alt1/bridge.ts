@@ -5,6 +5,10 @@ export interface Alt1Api {
  rsWidth?: number;
  rsHeight?: number;
  version?: string;
+ permissionOverlay?: boolean;
+ overLayRect?: (color:number,x:number,y:number,w:number,h:number,time:number,lineWidth:number)=>boolean;
+ overLaySetGroup?: (group:string)=>void;
+ overLayClearGroup?: (group:string)=>void;
  rsLinked?: boolean;
  maxtransfer?: number;
  capture?: (x:number,y:number,w:number,h:number)=>Uint8ClampedArray;
