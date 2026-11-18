@@ -1,13 +1,13 @@
 {
   "name": "ports-ultimate-helper",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "prebuild": "node scripts/prepare-ocr.mjs"
+    "prebuild": "node scripts/prepare-alt1-ocr.mjs"
   },
   "devDependencies": {
     "typescript": "~5.9.3",
@@ -16,6 +16,7 @@
     "jsdom": "^26.1.0"
   },
   "dependencies": {
-    "tesseract.js": "5.1.1"
+    "tesseract.js": "5.1.1",
+    "alt1": "0.1.3"
   }
 }
