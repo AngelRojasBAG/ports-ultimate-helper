@@ -1,0 +1,2 @@
+# v0.3.14
+Card Sharp screenshot: Seafaring O instead of 0. Normalize an isolated letter O/o only within labeled numeric fields; reject mixed alphanumeric tokens rather than infer digits. Keep signed values, level bounds, two readings, confidence threshold and storage unchanged. Regression tests use reported text. Live validation pending.
