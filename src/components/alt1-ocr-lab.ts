@@ -1,3 +1,4 @@
+import {mountNumericLab} from './ports-numeric-lab';
 import {captureGame} from '../alt1/capture';
 import {findRosterAnchor,type RosterAnchor} from '../core/roster-anchor';
 type Color=[number,number,number];
@@ -57,6 +58,7 @@ function scoreText(text:string,field:string){
 }
 export function mountAlt1Lab(root:HTMLElement){
  const section=document.createElement('section');section.className='assistant';section.innerHTML='<h2>Laboratorio OCR · Solo Alt1</h2><p>Selecciona una unidad en Crew Roster y pulsa Analizar. Se prueban fuentes de Alt1 con colores de la captura y búsqueda ampliada de posiciones. Sin Tesseract. No se escribe en tu registro.</p><button id="alt1-lab-run">Analizar unidad seleccionada</button><p id="alt1-lab-status" role="status"></p><div id="alt1-lab-output"></div>';root.append(section);
+ mountNumericLab(root,load);
  const btn=section.querySelector<HTMLButtonElement>('#alt1-lab-run')!,status=section.querySelector<HTMLElement>('#alt1-lab-status')!,output=section.querySelector<HTMLElement>('#alt1-lab-output')!;
  btn.onclick=async()=>{btn.disabled=true;output.replaceChildren();status.textContent='Cargando fuentes especializadas…';try{const {ocr,fonts}=await load();const frame=captureGame(window.alt1),a=findRosterAnchor(frame);if(!a)throw Error('Abre Crew Roster con el panel completo visible.');const started=performance.now();for(const r of regions){status.textContent='Analizando '+r.name+'…';const {out,w,h}=crop(frame,a,r);const group=document.createElement('details');group.open=true;const heading=document.createElement('summary');heading.textContent=r.name;group.append(heading);const canvas=document.createElement('canvas');canvas.width=out.width;canvas.height=out.height;canvas.getContext('2d')!.putImageData(out,0,0);canvas.style.maxWidth='100%';group.append(canvas);const rows=bands(out,w,h);
  const colors=pixelColors(out,w,h,r.palette);
