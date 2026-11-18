@@ -30,7 +30,12 @@ export async function readDetails(frame:ImageData,a:RosterAnchor){
  const src=document.createElement('canvas');src.width=frame.width;src.height=frame.height;src.getContext('2d')!.putImageData(frame,0,0);
  function crop(dx:number,dy:number,w:number,h:number){const x=Math.round(a.x+dx*a.scale),y=Math.round(a.y+dy*a.scale),ww=Math.round(w*a.scale),hh=Math.round(h*a.scale);if(x<0||y<0||x+ww>frame.width||y+hh>frame.height)throw Error('Detalle fuera de pantalla.');const c=document.createElement('canvas');c.width=ww*4;c.height=hh*4;c.getContext('2d')!.drawImage(src,x,y,ww,hh,0,0,c.width,c.height);return c;}
  const w=await getWorker();
- const trait=await w.recognize(crop(-315,436,270,47));
+ const original=crop(-315,436,270,47);
+ const clean=document.createElement('canvas');clean.width=original.width;clean.height=original.height;const tc=clean.getContext('2d')!;tc.drawImage(original,0,0);
+ const image=tc.getImageData(0,0,clean.width,clean.height);
+ for(let i=0;i<image.data.length;i+=4){const r=image.data[i],g=image.data[i+1],b=image.data[i+2];const ink=Math.min(r,g,b)>120&&Math.max(r,g,b)-Math.min(r,g,b)<65;image.data[i]=image.data[i+1]=image.data[i+2]=ink?0:255;image.data[i+3]=255;}
+ tc.putImageData(image,0,0);
+ const trait=await w.recognize(clean);
  await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_LINE});
  try{
  const marker=crop(-382,338,24,20);
