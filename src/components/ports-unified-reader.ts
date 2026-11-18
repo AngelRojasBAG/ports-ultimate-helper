@@ -1,3 +1,4 @@
+import {observedFields} from '../core/ports-observed-fields';
 import {titleSeeds} from '../core/ports-title-seeds';
 import {traitRows,readDualTrait,loadTraitSamples} from '../core/ports-trait-dual';
 import {readFullCrewTrait} from '../core/ports-full-traits';
@@ -52,6 +53,7 @@ export function mountUnifiedReader(root:HTMLElement){
    const key=slot.id+'/'+slot.fingerprint+'/'+hash;
    if(automatic){if(key!==stableKey){stableKey=key;stableCount=1;return;}if(++stableCount<2||key===lastKey)return;}
    lastKey=key;copy.disabled=true;out.replaceChildren();report='';
+   const verifiedSamples=[...samples,...observedFields];
    const fonts=combinedFonts(samples);
    const crop=(field:Field,dx:number,dy:number,w:number,h:number)=>extractMask(frame,a.x+dx,a.y+dy,w,h,field);
    const rows:{label:string;value:string|null;source:string}[]=[];
@@ -62,7 +64,7 @@ export function mountUnifiedReader(root:HTMLElement){
     const mask=crop(field,dx,dy,w,h),glyphs=fonts[field];
     let value=mask?decodeGlyphs(field,mask,glyphs,engine):null;
     let source='Alt1 caracteres';
-    const exact=matchSample(samples,field,mask)??(field==='title'?matchTitleWithNoise(mask,[...samples,...titleSeeds]):null);
+    const exact=matchSample(verifiedSamples,field,mask)??(field==='title'?matchTitleWithNoise(mask,[...verifiedSamples,...titleSeeds]):null);
     if(value!==null&&exact!==null&&value.toUpperCase()!==exact.toUpperCase()){value=null;source='Conflicto';}
     else if(value===null&&exact!==null){value=exact;source=field==='title'?'Patrón de nombre verificado':'Patrón registrado';}
     if(field==='title'&&slot.kind==='crew'&&value&&!knownCrewName(value)){value=null;source='Nombre fuera del catálogo';}
@@ -80,7 +82,7 @@ export function mountUnifiedReader(root:HTMLElement){
    const dual=slot.kind==='crew'?readDualTrait(traitRows(frame,a.x-315,a.y+436,270,47),loadTraitSamples(),engine):null;
    if(dual)numericDebug.push('Traits OCR 90/110: '+dual.results.map(q=>q.threshold+'='+ (q.value??'Pendiente')).join(' / '));
    const lines=mask?readDetailLines(mask,samples,slot.kind):null;
-   const exact=mask?matchSample(samples,'details',mask):null;
+   const exact=mask?matchSample(verifiedSamples,'details',mask):null;
    const known=exact?parseDetails('',exact,slot.kind):null;
    for(const [key,label] of [['traitsText','Traits'],['personality','Personalidad']] as const){
     if(key==='personality'&&slot.kind==='crew')continue;

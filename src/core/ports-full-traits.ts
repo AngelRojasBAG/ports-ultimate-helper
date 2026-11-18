@@ -7,7 +7,7 @@ export function fullTraitRow(m:Mask):Mask|null{
  // Refuse a crop that does not exhibit this separator.
  if(m.h<16)return null;
  const counts=Array.from({length:m.h},(_,y)=>m.bits.slice(y*m.w,(y+1)*m.w).replace(/0/g,'').length);
- if(counts.slice(13,16).some(n=>n!==0)||counts.slice(3,10).some(n=>n===0))return null;
+ if(counts.slice(13,16).some(n=>n!==0)||counts.slice(3,9).some(n=>n===0))return null;
  let left=m.w,right=-1;
  for(let y=0;y<13;y++)for(let x=0;x<m.w;x++)if(m.bits[y*m.w+x]==='1'){left=Math.min(left,x);right=Math.max(right,x);}
  if(right<left)return null;
