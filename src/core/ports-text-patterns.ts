@@ -2,12 +2,12 @@ export type Mask={w:number;h:number;bits:string};
 export type Frame={width:number;height:number;data:Uint8ClampedArray};
 export type Field='title'|'level'|'ship'|'details';
 export type Sample={field:Field;text:string;mask:Mask};
-export function extractMask(f:Frame,x:number,y:number,w:number,h:number,field:Field):Mask|null{
+export function extractMask(f:Frame,x:number,y:number,w:number,h:number,field:Field,detailThreshold=130):Mask|null{
  if(x<0||y<0||x+w>f.width||y+h>f.height)return null;
  const a:number[][]=[];let l=w,r=-1,t=h,b=-1;
  for(let j=0;j<h;j++){const row:number[]=[];for(let i=0;i<w;i++){
   const k=((y+j)*f.width+x+i)*4,R=f.data[k],G=f.data[k+1],B=f.data[k+2];
-  const ink=field==='title'?R>145&&G>100&&R-B>35&&G-B>15:Math.min(R,G,B)>130&&Math.max(R,G,B)-Math.min(R,G,B)<70;
+  const ink=field==='title'?R>145&&G>100&&R-B>35&&G-B>15:Math.min(R,G,B)>(field==='details'?detailThreshold:130)&&Math.max(R,G,B)-Math.min(R,G,B)<70;
   row.push(+ink);if(ink){l=Math.min(l,i);r=Math.max(r,i);t=Math.min(t,j);b=Math.max(b,j)}
  }a.push(row)}
  if(r<l)return null;

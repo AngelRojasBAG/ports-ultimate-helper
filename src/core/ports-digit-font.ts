@@ -12,8 +12,18 @@ export const digitRows:Record<string,string>={
  '8':'0111000/1000100/1000100/1101000/0111000/1001100/1000100/1001100/0111000',
  '9':'0111000/1001100/1000100/1001100/0111100/0000100/0001100/0001000/1110000'
 };
+// Green variants measured from the supplied Golden Katana screenshot.
+export const greenDigitRows:Record<string,string>={
+ '8':'0111000/1001100/1000100/1101000/0111000/1001100/1000100/1001100/0111000',
+ '6':'0111000/0100000/1000000/1111000/1101100/1000100/1000100/1101100/0111000'
+};
+const digitVariants=[...Object.entries(digitRows),...Object.entries(greenDigitRows)];
+export function statInk(r:number,g:number,b:number){
+ return Math.min(r,g,b)>100||r-Math.max(g,b)>100||g-Math.max(r,b)>40;
+}
+
 export function createDigitFont(){
- const chars=Object.entries(digitRows).map(([chr,rows],i)=>{
+ const chars=digitVariants.map(([chr,rows],i)=>{
   const pixels:number[]=[];
   rows.split('/').forEach((row,y)=>[...row].forEach((v,x)=>{if(v==='1')pixels.push(x,y,255)}));
   return {chr,width:7,bonus:pixels.length/3*5,secondary:false,templatex:i*8,pixels};
@@ -23,8 +33,8 @@ export function createDigitFont(){
 // Compare the whole digit cell, not just the foreground pixels. An ambiguous or
 // unknown pattern remains pending. This is a verification guard, not an OCR fallback.
 export function verifyDigit(rows:string):string|null{
- const exact=Object.entries(digitRows).filter(([,pattern])=>pattern===rows);
- return exact.length===1?exact[0][0]:null;
+ const exact=[...new Set(digitVariants.filter(([,pattern])=>pattern===rows).map(([ch])=>ch))];
+ return exact.length===1?exact[0]:null;
 }
 export type NumericFrame={width:number;height:number;data:Uint8ClampedArray};
 export function cellMask(frame:NumericFrame,x:number,y:number):string|null{
@@ -32,7 +42,7 @@ export function cellMask(frame:NumericFrame,x:number,y:number):string|null{
  const rows:string[]=[];
  for(let dy=0;dy<9;dy++){
   let row='';
-  for(let dx=0;dx<7;dx++){const i=((y+dy)*frame.width+x+dx)*4;row+=Math.min(frame.data[i],frame.data[i+1],frame.data[i+2])>100?'1':'0'}
+  for(let dx=0;dx<7;dx++){const i=((y+dy)*frame.width+x+dx)*4;row+=statInk(frame.data[i],frame.data[i+1],frame.data[i+2])?'1':'0'}
   rows.push(row);
  }
  return rows.join('/');
@@ -63,7 +73,7 @@ export function readSignedNumber(frame:NumericFrame,x:number,y:number,read:(rows
  for(let dy=0;dy<9;dy++)for(let dx=0;dx<4;dx++){
   const i=((y+dy)*frame.width+x+dx)*4;
   const [r,g,b]=[frame.data[i],frame.data[i+1],frame.data[i+2]];
-  if(Math.min(r,g,b)>100||(r>150&&r-g>65&&r-b>65))marks.push({x:dx,y:dy});
+  if(statInk(r,g,b))marks.push({x:dx,y:dy});
  }
  if(!marks.length)return null;
  const minX=Math.min(...marks.map(p=>p.x)),maxX=Math.max(...marks.map(p=>p.x));

@@ -29,11 +29,11 @@ export function mountGlyphTrainer(root:HTMLElement){
    if(!a||a.scale!==1)throw Error('Abre Crew Roster al 100%.');
    const slot=selectedSlot(inspectGrid(frame,a));if(!slot)throw Error('Selecciona una unidad inequívoca.');
    const regions=[['title',-350,338,330,23],['level',-315,361,115,30],['ship',-382,338,24,20],['details',-315,436,270,47]] as const;
-   let missing=0;
+   let missing=0,unsegmented=0;
    for(const [f,dx,dy,w,h] of regions){
-    const mask=extractMask(frame,a.x+dx,a.y+dy,w,h,f);if(!mask)continue;
-    if(f==='details'){const block=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Traits · vista completa (sin calibración individual)';block.append(summary);const row=fullTraitRow(mask);const msg=document.createElement('p');msg.textContent='Fragmentos de 7 px desactivados. Vista del primer renglón completo, incluyendo ascendentes y descendentes.';block.append(msg,image(row??mask));tasks.append(block);continue;}
-    const lines=[splitGlyphs(f,mask)];
+    const mask=extractMask(frame,a.x+dx,a.y+dy,w,h,f);if(!mask){unsegmented++;continue;}
+    if(f==='details'){const block=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Traits · vista completa (sin calibración individual)';block.append(summary);const row=fullTraitRow(mask);const msg=document.createElement('p');msg.textContent='Fragmentos de 7 px desactivados. Vista del primer renglón completo, incluyendo ascendentes y descendentes.';block.append(msg,image(row??mask));for(const threshold of [90,110,130,150]){const variant=extractMask(frame,a.x+dx,a.y+dy,w,h,f,threshold);if(!variant)continue;const caption=document.createElement('p');caption.textContent='Umbral '+threshold+' · diagnóstico';block.append(caption,image(fullTraitRow(variant)??variant));}tasks.append(block);continue;}
+    const lines=[splitGlyphs(f,mask)];if(!lines[0].length)unsegmented++;
     const block=document.createElement('details');block.open=true;const summary=document.createElement('summary');summary.textContent=f;block.append(summary);
     for(const [lineNo,parts] of lines.entries()){
      const caption=document.createElement('p');caption.textContent='Línea '+(lineNo+1)+' · '+(parts.map(p=>labelMask(p.mask,fonts[f])??'?').join('')||'Sin segmentar');block.append(caption,image(mask));
@@ -50,7 +50,7 @@ export function mountGlyphTrainer(root:HTMLElement){
     }
     tasks.append(block);
    }
-   status.textContent='Casilla '+slot.id+' · '+missing+' fragmentos desconocidos. No guardes fragmentos unidos o incompletos.';
+   status.textContent='Casilla '+slot.id+' · '+missing+' fragmentos desconocidos · '+unsegmented+' campos sin segmentar. No guardes fragmentos unidos o incompletos.';
   }catch(e){status.textContent=String(e)}
  };
 }

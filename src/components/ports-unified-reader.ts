@@ -6,7 +6,7 @@ import {inspectGrid,selectedSlot} from '../core/crew-grid';
 import {extractMask,matchSample,addSample,type Sample,type Field} from '../core/ports-text-patterns';
 import {decodeGlyphs,type GlyphEngine} from '../core/ports-glyph-font';
 import {readDetailLines} from '../core/ports-detail-lines';
-import {readSignedNumber} from '../core/ports-digit-font';
+import {cellMask,readSignedNumber} from '../core/ports-digit-font';
 import {readGlyph,type DigitEngine} from './ports-numeric-lab';
 import {knownCrewName} from '../core/crew-name';
 import {parseDetails} from '../core/unit-details';
@@ -53,6 +53,7 @@ export function mountUnifiedReader(root:HTMLElement){
    const fonts=combinedFonts(samples);
    const crop=(field:Field,dx:number,dy:number,w:number,h:number)=>extractMask(frame,a.x+dx,a.y+dy,w,h,field);
    const rows:{label:string;value:string|null;source:string}[]=[];
+   const numericDebug:string[]=['Ancla: '+a.x+'/'+a.y+' · escala '+a.scale];
    const push=(label:string,value:string|null,source:string)=>rows.push({label,value,source});
    const regions=[['title','Nombre',-350,338,330,23],['level','Nivel',-315,361,115,30],['ship','Barco',-382,338,24,20]] as const;
    for(const [field,label,dx,dy,w,h] of regions){
@@ -65,8 +66,11 @@ export function mountUnifiedReader(root:HTMLElement){
     if(field==='title'&&slot.kind==='crew'&&value&&!knownCrewName(value)){value=null;source='Nombre fuera del catálogo';}
     push(label,value,source+' · cobertura '+[...new Set(glyphs.map(g=>g.chr))].sort().join(' '));
    }
-   for(const [label,dx,dy] of [['Morale',-246,401],['Combat',-246,418],['Seafaring',-126,401],['Speed',-126,418]] as const)
-    push(label,readSignedNumber(frame,a.x+dx,a.y+dy,mask=>readGlyph(engine,mask)),'Alt1 numérico');
+   for(const [label,dx,dy] of [['Morale',-246,401],['Combat',-246,418],['Seafaring',-126,401],['Speed',-126,418]] as const){
+    const x=a.x+dx,y=a.y+dy,value=readSignedNumber(frame,x,y,mask=>readGlyph(engine,mask));
+    push(label,value,'Alt1 numérico · '+x+'/'+y);
+    if(value===null)numericDebug.push(label+' '+x+'/'+y+' · '+Array.from({length:5},(_,i)=>cellMask(frame,x+i*7,y)??'fuera').join(' | '));
+   }
    const mask=crop('details',-315,436,270,47);
    const independent=mask?readDetailCharacters(mask,samples,slot.kind,engine,fonts.details):null;
    const full=mask?readFullCrewTrait(mask,samples,slot.kind):null;
@@ -85,7 +89,7 @@ export function mountUnifiedReader(root:HTMLElement){
     dt.textContent=r.label;dd.textContent=r.value??'Pendiente';dd.className=r.value===null?'pending':'valid';small.textContent=r.source;dd.append(document.createElement('br'),small);out.append(dt,dd);
    }
    status.textContent='Casilla '+slot.id+' · '+complete+'/'+rows.length+' campos · '+Math.round(performance.now()-t)+' ms · Solo lectura';
-   report=status.textContent+'\n'+rows.map(r=>r.label+': '+(r.value??'Pendiente')+' ['+r.source+']').join('\n');copy.disabled=false;
+   report=status.textContent+'\n'+rows.map(r=>r.label+': '+(r.value??'Pendiente')+' ['+r.source+']').join('\n')+'\n'+numericDebug.join('\n');copy.disabled=false;
   }catch(e){lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent=String(e)}finally{button.disabled=false;busy=false}
  }
  button.onclick=()=>void run();

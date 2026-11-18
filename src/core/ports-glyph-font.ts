@@ -13,6 +13,23 @@ function columns(m:Mask):{x:number;w:number}[]{
  }
  return out;
 }
+export function cleanTitleMask(mask:Mask):Mask|null{
+ if(mask.h>=10&&mask.h<=12)return mask;
+ if(mask.h<10||mask.h>23)return null;
+ const count=Array.from({length:mask.h},(_,y)=>mask.bits.slice(y*mask.w,(y+1)*mask.w).replace(/0/g,'').length);
+ const windows=Array.from({length:mask.h-9},(_,y)=>({y,score:count.slice(y,y+10).reduce((a,b)=>a+b,0)})).sort((a,b)=>b.score-a.score);
+ const top=windows[0];if(!top||top.score<20||count.slice(top.y,top.y+10).some(n=>n<2))return null;
+ const h=Math.min(12,mask.h-top.y);
+ // An isolated point outside the main ten rows cannot extend the title width.
+ const body=slice(mask,0,top.y,mask.w,10),runs=columns(body);
+ if(!runs.length)return null;
+ const left=runs[0].x,right=runs[runs.length-1].x+runs[runs.length-1].w;
+ const trimmed=slice(mask,left,top.y,right-left,h);
+ // Only accept discarded ink if it is very sparse.
+ const outside=count.reduce((a,b)=>a+b,0)-trimmed.bits.replace(/0/g,'').length;
+ return outside<=3?trimmed:null;
+}
+
 export function splitGlyphs(field:GlyphField,mask:Mask):{mask:Mask;gap:number}[] {
  if(field==='ship')return [{mask,gap:0}];
  if(field==='level'){
@@ -23,8 +40,8 @@ export function splitGlyphs(field:GlyphField,mask:Mask):{mask:Mask;gap:number}[]
   return runs.slice(5).map((r,i)=>({mask:slice(mask,r.x,0,r.w,11),gap:i?r.x-runs[4+i].x-runs[4+i].w:0}));
  }
  // Preserve the descender: the real J is identical to I in the first 10 rows.
- if(mask.h<10||mask.h>12)return [];
- const body:Mask={w:mask.w,h:12,bits:mask.bits.padEnd(mask.w*12,'0')};
+ const cleaned=cleanTitleMask(mask);if(!cleaned)return [];
+ const body:Mask={w:cleaned.w,h:12,bits:cleaned.bits.padEnd(cleaned.w*12,'0')};
  const runs=columns(body);
  return runs.map((r,i)=>({mask:slice(body,r.x,0,r.w,12),gap:i?r.x-runs[i-1].x-runs[i-1].w:0}));
 }
