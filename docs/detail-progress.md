@@ -1,0 +1,2 @@
+# v0.4.2
+Detail mode now uses a shared completeness predicate for UI and overlays, requiring assignment, nonempty recognized traits and captain personality. Partial records orange unless active or next; existing basic mode unchanged. Retains previously stored details on matching name and fingerprint during rescan. Completeness is not proof of OCR accuracy or full trait coverage. Unknown traits and personality OCR geometry remain pending. No storage migration.

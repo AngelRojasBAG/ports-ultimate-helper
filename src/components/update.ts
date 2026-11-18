@@ -1,4 +1,4 @@
-const current='0.4.1';
+const current='0.4.2';
 export function mountUpdate(root:HTMLElement){
  const section=document.createElement('section');section.innerHTML='<h2>Actualizaciones</h2><p role="status">Versión instalada: '+current+'</p><button id="check-version">Buscar actualización</button><button id="reload-version">Recargar sin caché</button>';root.insertBefore(section,root.children[1]??null);
  const status=section.querySelector('[role=status]')!;
