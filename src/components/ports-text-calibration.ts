@@ -1,3 +1,4 @@
+import {readDetailCharacters} from '../core/ports-detail-characters';
 import {readDetailLines} from '../core/ports-detail-lines';
 import {trainGlyphs,decodeGlyphs,type GlyphEngine} from '../core/ports-glyph-font';
 import {loadAlt1OCR} from './alt1-ocr-lab';
@@ -57,6 +58,8 @@ export function mountTextCalibration(root:HTMLElement){
     }
     if(r.field==='details'){
      const d=readDetailLines(mask,samples,slot.kind);
+     const chars=readDetailCharacters(mask,samples,slot.kind,engine);
+     const charReport=document.createElement('p');charReport.textContent='Alt1 traits: '+(chars.traitsText??'Pendiente')+' · Personalidad OCR: '+(chars.personality??'Pendiente')+' · Cobertura: '+chars.coverage;block.append(charReport);
      const report=document.createElement('p');
      report.textContent='Traits por líneas (patrón): '+(d.traitsText??'Pendiente')+' · Personalidad: '+(slot.kind==='captain'?(d.personality??'Pendiente'):'No aplica')+' · Similitud: '+d.results.map(q=>q?Math.round(q.score*100)+'%':'—').join(' / ');
      block.append(report);

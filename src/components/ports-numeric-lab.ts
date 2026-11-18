@@ -2,9 +2,9 @@
 import {createDigitFont,readSignedNumber,cellMask} from '../core/ports-digit-font';
 import {captureGame} from '../alt1/capture';
 import {findRosterAnchor} from '../core/roster-anchor';
-type DigitEngine={readChar:(buffer:ImageData,font:ReturnType<typeof createDigitFont>,color:[number,number,number],x:number,y:number,backwards:boolean,allowSecondary:boolean)=>{chr:string}|null};
+export type DigitEngine={readChar:(buffer:ImageData,font:ReturnType<typeof createDigitFont>,color:[number,number,number],x:number,y:number,backwards:boolean,allowSecondary:boolean)=>{chr:string}|null};
 const font=createDigitFont();
-function readGlyph(engine:DigitEngine,rows:string){
+export function readGlyph(engine:DigitEngine,rows:string){
  const im=new ImageData(27,29);
  for(let i=3;i<im.data.length;i+=4)im.data[i]=255;
  rows.split('/').forEach((row,y)=>[...row].forEach((v,x)=>{if(v==='1'){const i=((y+10)*im.width+x+10)*4;im.data[i]=im.data[i+1]=im.data[i+2]=255;}}));

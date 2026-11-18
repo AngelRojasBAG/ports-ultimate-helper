@@ -1,3 +1,5 @@
+import {compactSections} from './components/compact-sections';
+import {mountUnifiedReader} from './components/ports-unified-reader';
 import {mountTextCalibration} from './components/ports-text-calibration';
 import {mountAlt1Lab} from './components/alt1-ocr-lab';
 import {mountAssistant} from './components/assistant';
@@ -9,7 +11,7 @@ import {getStatus,identify} from './alt1/bridge';
 import {loadSettings,saveSettings} from './core/storage';
 const root=document.querySelector<HTMLElement>('#app')!;
 const regions=['The Arc','The Skull','The Hook','The Scythe','The Bowl','The Pincers','The Loop','The Shield'];
-root.innerHTML=`<header><img src="./icon.svg" alt="" width="42"><div><h1>Ports Ultimate Helper</h1><small>RS3 · v0.4.15 · Asistente</small></div></header><section><h2>Conexión con Alt1</h2><dl id="status"></dl><button id="refresh">Comprobar conexión</button><p id="hint"></p><a id="install">Agregar a Alt1</a></section><section><h2>Mi puerto</h2><label for="ships">Barcos disponibles</label><select id="ships"><option>1</option><option>2</option><option>3</option><option>4</option></select><label for="region">Región actual</label><select id="region"></select><button id="save">Guardar configuración</button><p id="saved" role="status"></p></section><section><h2>Próximos módulos</h2><p>Tripulación · Componentes · Expediciones · Optimizador</p><small>Captura guiada experimental. No controla el juego.</small></section>`;
+root.innerHTML=`<header><img src="./icon.svg" alt="" width="42"><div><h1>Ports Ultimate Helper</h1><small>RS3 · v0.4.16 · Asistente</small></div></header><section><h2>Conexión con Alt1</h2><dl id="status"></dl><button id="refresh">Comprobar conexión</button><p id="hint"></p><a id="install">Agregar a Alt1</a></section><section><h2>Mi puerto</h2><label for="ships">Barcos disponibles</label><select id="ships"><option>1</option><option>2</option><option>3</option><option>4</option></select><label for="region">Región actual</label><select id="region"></select><button id="save">Guardar configuración</button><p id="saved" role="status"></p></section><section><h2>Próximos módulos</h2><p>Tripulación · Componentes · Expediciones · Optimizador</p><small>Captura guiada experimental. No controla el juego.</small></section>`;
 const status=root.querySelector('#status')!;
 const hint=root.querySelector('#hint')!;
 const ships=root.querySelector<HTMLSelectElement>('#ships')!;
@@ -22,8 +24,10 @@ root.querySelector('#refresh')!.addEventListener('click',refresh);
 root.querySelector('#save')!.addEventListener('click',()=>{const out=root.querySelector('#saved')!;try{saveSettings({ships:Number(ships.value),region:region.value});out.textContent='Configuración guardada localmente.';}catch{out.textContent='No se pudo guardar: almacenamiento no disponible.';}});
 try{identify();}catch{ /* Refresh remains available. */ }refresh();
 
-const assistantRoot=document.createElement('div');root.insertBefore(assistantRoot,root.children[1]??null);mountAlt1Lab(assistantRoot);mountTextCalibration(assistantRoot);mountAssistant(assistantRoot);
+const assistantRoot=document.createElement('div');root.insertBefore(assistantRoot,root.children[1]??null);mountUnifiedReader(assistantRoot);mountAlt1Lab(assistantRoot);mountTextCalibration(assistantRoot);mountAssistant(assistantRoot);
 const library=document.createElement('details');library.className='advanced';library.innerHTML='<summary>Catálogos y herramientas manuales</summary>';root.append(library);mountCatalog(library);
 
 mountMechanics(library);
 mountUpdate(root);
+
+compactSections(root);
