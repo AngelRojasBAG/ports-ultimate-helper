@@ -1,0 +1,2 @@
+# v0.3.2
+Visual heading mask from supplied 1920x1009 Crew Roster screenshot; searches translated positions and several scales. Similarity is template match score, not OCR accuracy. Selected panel OCR is still experimental; no automatic roster import. Raw recognized lines shown for diagnosis. Tests use synthetic fixtures; real client validation pending.
