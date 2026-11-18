@@ -1,0 +1,2 @@
+# v0.3.6
+User screenshot shows successful captain registration and correct Card Sharp fields alongside OCR noise from XP bar. Mask the bar in a separate OCR canvas, preserve raw preview. Keep confidence >=80 and two matching observations; distinguish parser failure from low confidence in status. Mask geometry inferred from screenshot and requires live verification. No game input.
