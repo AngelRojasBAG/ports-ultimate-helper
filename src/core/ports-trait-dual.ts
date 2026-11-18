@@ -1,6 +1,7 @@
 import type {Mask,Sample,Frame} from './ports-text-patterns';
 import {extractMask} from './ports-text-patterns';
-import {fullTraitRow} from './ports-full-traits';
+import {seededTraits} from './ports-trait-seeds';
+import {fullTraitRow,fullRowSimilarity} from './ports-full-traits';
 import {splitCoreLine} from './ports-detail-characters';
 import {fontForGlyphs,type Glyph,type GlyphEngine} from './ports-glyph-font';
 import {knownTraits} from './unit-details';
@@ -15,12 +16,24 @@ export function canonicalTrait(s:string){return knownTraits.find(t=>t.toLowerCas
 export function alignTrait(text:string,mask:Mask):Glyph[]|null{
  const canonical=canonicalTrait(text);if(!canonical||mask.h!==13)return null;
  const chars=[...canonical.replace(/ /g,'')],parts=splitCoreLine(mask);
- if(parts.length!==chars.length)return null;
- // Verify that inter-word gaps agree with the transcription.
  const expected=[...canonical].reduce<number[]>((a,ch,i)=>{if(ch===' ')a.push(canonical.slice(0,i).replace(/ /g,'').length);return a;},[]);
- const gaps=parts.flatMap((p,i)=>i&&p.gap>=3?[i]:[]);
- if(expected.join(',')!==gaps.join(','))return null;
- return parts.map((p,i)=>({chr:chars[i],mask:p.mask}));
+ // Search only joins across a single empty column. Reject ambiguous alignments.
+ // No blind merging: this font also has one-pixel gaps between actual letters.
+ const paths:Glyph[][]=[];
+ function walk(i:number,j:number,current:Glyph[]){
+  if(paths.length>1)return;
+  if(i===parts.length&&j===chars.length){paths.push(current);return;}
+  if(i>=parts.length||j>=chars.length||parts.length-i<chars.length-j)return;
+  if(j>0&&((parts[i].gap>=4)!==expected.includes(j)))return;
+  const part=parts[i];walk(i+1,j+1,[...current,{chr:chars[j],mask:part.mask}]);
+  const next=parts[i+1];
+  if(next&&next.gap===1&&part.mask.w+next.mask.w+1<=12){
+   const w=part.mask.w+next.mask.w+1;
+   const bits=Array.from({length:13},(_,y)=>part.mask.bits.slice(y*part.mask.w,(y+1)*part.mask.w)+'0'+next.mask.bits.slice(y*next.mask.w,(y+1)*next.mask.w)).join('');
+   walk(i+2,j+1,[...current,{chr:chars[j],mask:{w,h:13,bits}}]);
+  }
+ }
+ walk(0,0,[]);return paths.length===1?paths[0]:null;
 }
 export function trainFullTraits(samples:TraitSample[],threshold:Threshold):Glyph[]{
  const map=new Map<string,Glyph>(),bad=new Set<string>();
@@ -44,8 +57,8 @@ export function readFullCharacters(mask:Mask,glyphs:Glyph[],engine:GlyphEngine){
 }
 export function loadTraitSamples():TraitSample[]{
  const data:unknown=JSON.parse(localStorage.getItem(KEY)??'[]');
- if(!Array.isArray(data)||data.length>1000)return [];
- return data.filter(s=>s&&typeof s.text==='string'&&canonicalTrait(s.text)&&(s.threshold===90||s.threshold===110)&&s.mask&&Number.isInteger(s.mask.w)&&s.mask.w>0&&s.mask.w<=270&&s.mask.h===13&&typeof s.mask.bits==='string'&&s.mask.bits.length===13*s.mask.w&&/^[01]+$/.test(s.mask.bits));
+ if(!Array.isArray(data)||data.length>1000)return [...seededTraits];
+ return [...seededTraits,...data.filter(s=>s&&typeof s.text==='string'&&canonicalTrait(s.text)&&(s.threshold===90||s.threshold===110)&&s.mask&&Number.isInteger(s.mask.w)&&s.mask.w>0&&s.mask.w<=270&&s.mask.h===13&&typeof s.mask.bits==='string'&&s.mask.bits.length===13*s.mask.w&&/^[01]+$/.test(s.mask.bits))];
 }
 export function saveTraitSamples(text:string,rows:ReturnType<typeof traitRows>){
  const canonical=canonicalTrait(text);if(!canonical)throw Error('Selecciona un trait válido.');
@@ -55,8 +68,25 @@ export function saveTraitSamples(text:string,rows:ReturnType<typeof traitRows>){
  if(current.length>1000)throw Error('Límite de patrones.');
  localStorage.setItem(KEY,JSON.stringify(current));return accepted.map(r=>r.threshold);
 }
+export function matchTraitTemplate(mask:Mask,samples:TraitSample[],threshold:Threshold){
+ const scores=new Map<string,number>();
+ for(const s of samples){
+  if(s.threshold!==threshold||!canonicalTrait(s.text))continue;
+  const score=fullRowSimilarity(mask,s.mask);
+  scores.set(s.text,Math.max(scores.get(s.text)??0,score));
+ }
+ const ranked=[...scores].sort((a,b)=>b[1]-a[1]);
+ if(!ranked[0]||ranked[0][1]<.90||ranked[0][1]-(ranked[1]?.[1]??0)<.12)return null;
+ return ranked[0][0];
+}
 export function readDualTrait(rows:ReturnType<typeof traitRows>,samples:TraitSample[],engine:GlyphEngine){
- const results=rows.map(r=>({threshold:r.threshold,value:r.mask?readFullCharacters(r.mask,trainFullTraits(samples,r.threshold),engine):null}));
+ const results=rows.map(r=>{
+  if(!r.mask)return {threshold:r.threshold,value:null,method:'none'};
+  const chars=readFullCharacters(r.mask,trainFullTraits(samples,r.threshold),engine);
+  const template=matchTraitTemplate(r.mask,samples,r.threshold);
+  if(chars&&template&&chars!==template)return {threshold:r.threshold,value:null,method:'conflict'};
+  return {threshold:r.threshold,value:chars??template,method:chars?'characters':template?'template':'none'};
+ });
  const primary=results.find(r=>r.threshold===90)?.value,secondary=results.find(r=>r.threshold===110)?.value;
- return {value:primary&&primary===secondary?primary:null,results};
+ return {value:primary&&primary===secondary?primary:null,results,method:results.every(r=>r.method==='characters')?'characters':'template'};
 }

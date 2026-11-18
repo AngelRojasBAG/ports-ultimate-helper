@@ -92,3 +92,19 @@ export function decodeGlyphs(field:GlyphField,mask:Mask,glyphs:Glyph[],engine:Gl
  if(field==='ship'&&!/^[1-4-]$/.test(result))return null;
  return result;
 }
+
+// Match a previously verified title inside an expanded mask. Keep every
+// expected pixel including descenders; permit only sparse *external* noise.
+export function matchTitleWithNoise(mask:Mask|null,samples:Sample[]):string|null{
+ if(!mask)return null;
+ const ink=mask.bits.replace(/0/g,'').length,found=new Set<string>();
+ for(const s of samples){
+  if(s.field!=='title')continue;
+  const ref=s.mask;
+  if(ref.w>mask.w||ref.h>mask.h||Math.abs(ink-ref.bits.replace(/0/g,'').length)>8)continue;
+  for(let y=0;y<=mask.h-ref.h;y++)for(let x=0;x<=mask.w-ref.w;x++){
+   if(slice(mask,x,y,ref.w,ref.h).bits===ref.bits)found.add(s.text.toUpperCase());
+  }
+ }
+ return found.size===1?[...found][0]:null;
+}

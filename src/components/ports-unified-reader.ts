@@ -5,7 +5,7 @@ import {captureGame} from '../alt1/capture';
 import {findRosterAnchor} from '../core/roster-anchor';
 import {inspectGrid,selectedSlot} from '../core/crew-grid';
 import {extractMask,matchSample,addSample,type Sample,type Field} from '../core/ports-text-patterns';
-import {decodeGlyphs,type GlyphEngine} from '../core/ports-glyph-font';
+import {decodeGlyphs,matchTitleWithNoise,type GlyphEngine} from '../core/ports-glyph-font';
 import {readDetailLines} from '../core/ports-detail-lines';
 import {cellMask,readSignedNumber} from '../core/ports-digit-font';
 import {readGlyph,type DigitEngine} from './ports-numeric-lab';
@@ -61,9 +61,9 @@ export function mountUnifiedReader(root:HTMLElement){
     const mask=crop(field,dx,dy,w,h),glyphs=fonts[field];
     let value=mask?decodeGlyphs(field,mask,glyphs,engine):null;
     let source='Alt1 caracteres';
-    const exact=matchSample(samples,field,mask);
+    const exact=matchSample(samples,field,mask)??(field==='title'?matchTitleWithNoise(mask,samples):null);
     if(value!==null&&exact!==null&&value.toUpperCase()!==exact.toUpperCase()){value=null;source='Conflicto';}
-    else if(value===null&&exact!==null){value=exact;source='Patrón registrado';}
+    else if(value===null&&exact!==null){value=exact;source=field==='title'?'Patrón de nombre verificado':'Patrón registrado';}
     if(field==='title'&&slot.kind==='crew'&&value&&!knownCrewName(value)){value=null;source='Nombre fuera del catálogo';}
     push(label,value,source+' · cobertura '+[...new Set(glyphs.map(g=>g.chr))].sort().join(' '));
    }
@@ -84,7 +84,7 @@ export function mountUnifiedReader(root:HTMLElement){
     if(key==='personality'&&slot.kind==='crew')continue;
     const values=[independent?.[key],key==='traitsText'?full?.traitsText:null,key==='traitsText'?dual?.value:null,lines?.[key],known?.[key]].filter((v):v is string=>!!v);
     const conflict=new Set(values.map(v=>v.toLowerCase())).size>1;
-    push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':key==='traitsText'&&dual?.value?'Alt1 caracteres 90+110':known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
+    push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':key==='traitsText'&&dual?.value?(dual.method==='characters'?'Alt1 caracteres 90+110':'Patrón verificado 90+110'):known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
    }
    const complete=rows.filter(r=>r.value!==null).length;
    for(const r of rows){
