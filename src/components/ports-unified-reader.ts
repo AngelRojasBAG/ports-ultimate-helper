@@ -1,3 +1,4 @@
+import {titleSeeds} from '../core/ports-title-seeds';
 import {traitRows,readDualTrait,loadTraitSamples} from '../core/ports-trait-dual';
 import {readFullCrewTrait} from '../core/ports-full-traits';
 import {loadAlt1OCR} from './alt1-ocr-lab';
@@ -61,11 +62,11 @@ export function mountUnifiedReader(root:HTMLElement){
     const mask=crop(field,dx,dy,w,h),glyphs=fonts[field];
     let value=mask?decodeGlyphs(field,mask,glyphs,engine):null;
     let source='Alt1 caracteres';
-    const exact=matchSample(samples,field,mask)??(field==='title'?matchTitleWithNoise(mask,samples):null);
-    if(field==='title'&&value===null&&mask)numericDebug.push('Nombre máscara '+mask.w+'x'+mask.h+' · '+mask.bits);
+    const exact=matchSample(samples,field,mask)??(field==='title'?matchTitleWithNoise(mask,[...samples,...titleSeeds]):null);
     if(value!==null&&exact!==null&&value.toUpperCase()!==exact.toUpperCase()){value=null;source='Conflicto';}
     else if(value===null&&exact!==null){value=exact;source=field==='title'?'Patrón de nombre verificado':'Patrón registrado';}
     if(field==='title'&&slot.kind==='crew'&&value&&!knownCrewName(value)){value=null;source='Nombre fuera del catálogo';}
+    if(field==='title'&&value===null&&mask)numericDebug.push('Nombre máscara '+mask.w+'x'+mask.h+' · '+mask.bits);
     push(label,value,source+' · cobertura '+[...new Set(glyphs.map(g=>g.chr))].sort().join(' '));
    }
    for(const [label,dx,dy] of [['Morale',-246,401],['Combat',-246,418],['Seafaring',-126,401],['Speed',-126,418]] as const){
