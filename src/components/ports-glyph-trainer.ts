@@ -1,3 +1,5 @@
+import {traitRows,saveTraitSamples,loadTraitSamples,alignTrait,trainFullTraits} from '../core/ports-trait-dual';
+import {knownTraits} from '../core/unit-details';
 import {captureGame} from '../alt1/capture';
 import {findRosterAnchor} from '../core/roster-anchor';
 import {inspectGrid,selectedSlot} from '../core/crew-grid';
@@ -32,7 +34,16 @@ export function mountGlyphTrainer(root:HTMLElement){
    let missing=0,unsegmented=0;
    for(const [f,dx,dy,w,h] of regions){
     const mask=extractMask(frame,a.x+dx,a.y+dy,w,h,f);if(!mask){unsegmented++;continue;}
-    if(f==='details'){const block=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Traits · vista completa (sin calibración individual)';block.append(summary);const row=fullTraitRow(mask);const msg=document.createElement('p');msg.textContent='Fragmentos de 7 px desactivados. Vista del primer renglón completo, incluyendo ascendentes y descendentes.';block.append(msg,image(row??mask));for(const threshold of [90,110,130,150]){const variant=extractMask(frame,a.x+dx,a.y+dy,w,h,f,threshold);if(!variant)continue;const caption=document.createElement('p');caption.textContent='Umbral '+threshold+' · diagnóstico';block.append(caption,image(fullTraitRow(variant)??variant));}tasks.append(block);continue;}
+    if(f==='details'){const block=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Traits · vista completa (sin calibración individual)';block.append(summary);const row=fullTraitRow(mask);const msg=document.createElement('p');msg.textContent='Fragmentos de 7 px desactivados. Vista del primer renglón completo, incluyendo ascendentes y descendentes.';block.append(msg,image(row??mask));for(const threshold of [90,110,130,150]){const variant=extractMask(frame,a.x+dx,a.y+dy,w,h,f,threshold);if(!variant)continue;const caption=document.createElement('p');caption.textContent='Umbral '+threshold+' · diagnóstico';block.append(caption,image(fullTraitRow(variant)??variant));}if(slot.kind==='crew'){
+      const rows=traitRows(frame,a.x+dx,a.y+dy,w,h);
+      const select=document.createElement('select');const empty=document.createElement('option');empty.value='';empty.textContent='Seleccionar trait visible';select.append(empty);
+      for(const trait of knownTraits){const opt=document.createElement('option');opt.value=trait;opt.textContent=trait;select.append(opt);}
+      const preview=document.createElement('div'),save=document.createElement('button');save.textContent='Registrar línea 90/110';save.disabled=true;
+      select.onchange=()=>{preview.replaceChildren();let ok=false;for(const row of rows){const parts=row.mask?alignTrait(select.value,row.mask):null;const p=document.createElement('p');p.textContent=row.threshold+': '+(parts?'Alineación por caracteres':'No segmentable');preview.append(p);if(parts){ok=true;const grid=document.createElement('div');grid.className='glyph-grid';for(const part of parts){const card=document.createElement('div');card.append(image(part.mask),document.createTextNode(part.chr));grid.append(card);}preview.append(grid);}}save.disabled=!ok;};
+      save.onclick=()=>{try{const accepted=saveTraitSamples(select.value,rows);status.textContent='Patrones completos guardados: '+accepted.join(', ')+' · '+loadTraitSamples().length+' muestras.';save.disabled=true;}catch(e){status.textContent=String(e)}};
+      const info=document.createElement('p');info.textContent='Fuentes nuevas: '+[90,110].map(n=>n+': '+new Set(trainFullTraits(loadTraitSamples(),n as 90|110).map(g=>g.chr)).size+' símbolos').join(' / ')+'. Revisa cada letra antes de guardar.';
+      block.append(info,select,preview,save);
+     }tasks.append(block);continue;}
     const lines=[splitGlyphs(f,mask)];if(!lines[0].length)unsegmented++;
     const block=document.createElement('details');block.open=true;const summary=document.createElement('summary');summary.textContent=f;block.append(summary);
     for(const [lineNo,parts] of lines.entries()){

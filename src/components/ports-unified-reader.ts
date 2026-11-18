@@ -1,3 +1,4 @@
+import {traitRows,readDualTrait,loadTraitSamples} from '../core/ports-trait-dual';
 import {readFullCrewTrait} from '../core/ports-full-traits';
 import {loadAlt1OCR} from './alt1-ocr-lab';
 import {captureGame} from '../alt1/capture';
@@ -74,14 +75,16 @@ export function mountUnifiedReader(root:HTMLElement){
    const mask=crop('details',-315,436,270,47);
    const independent=mask?readDetailCharacters(mask,samples,slot.kind,engine,fonts.details):null;
    const full=mask?readFullCrewTrait(mask,samples,slot.kind):null;
+   const dual=slot.kind==='crew'?readDualTrait(traitRows(frame,a.x-315,a.y+436,270,47),loadTraitSamples(),engine):null;
+   if(dual)numericDebug.push('Traits OCR 90/110: '+dual.results.map(q=>q.threshold+'='+ (q.value??'Pendiente')).join(' / '));
    const lines=mask?readDetailLines(mask,samples,slot.kind):null;
    const exact=mask?matchSample(samples,'details',mask):null;
    const known=exact?parseDetails('',exact,slot.kind):null;
    for(const [key,label] of [['traitsText','Traits'],['personality','Personalidad']] as const){
     if(key==='personality'&&slot.kind==='crew')continue;
-    const values=[independent?.[key],key==='traitsText'?full?.traitsText:null,lines?.[key],known?.[key]].filter((v):v is string=>!!v);
+    const values=[independent?.[key],key==='traitsText'?full?.traitsText:null,key==='traitsText'?dual?.value:null,lines?.[key],known?.[key]].filter((v):v is string=>!!v);
     const conflict=new Set(values.map(v=>v.toLowerCase())).size>1;
-    push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
+    push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':key==='traitsText'&&dual?.value?'Alt1 caracteres 90+110':known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
    }
    const complete=rows.filter(r=>r.value!==null).length;
    for(const r of rows){
