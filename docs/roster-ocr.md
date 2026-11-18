@@ -1,0 +1,2 @@
+# v0.3.3
+The original 1920×1009 sample was cropped at (645,587)–(915,685), enlarged 4× and tested with local desktop Tesseract PSM 6: Sebastian Wytche, Level 7, Morale 430, Combat 410, Seafaring 430, Speed 950. Browser Tesseract.js implementation and Alt1 WebAssembly support not yet tested. Crop relative to detected title; preview exposed for debugging. English model downloaded at build time, not at runtime from external websites. No image upload. Confidence is heuristic, not validation; explicit confirmation remains.

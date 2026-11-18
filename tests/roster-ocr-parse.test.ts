@@ -1,0 +1,1 @@
+import {it,expect} from 'vitest';import {parseReading} from '../src/core/roster-reader';it('reads real sample OCR',()=>expect(parseReading(['SEBASTIAN WYTCHE','Level 7 [fee 23%','Morale: 430 Seafaring: 430','Combat: 410 Speed; 950'])?.speed).toBe(950));
