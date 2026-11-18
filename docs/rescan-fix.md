@@ -1,0 +1,2 @@
+# v0.3.13
+Native window.confirm was the gate before reset and may be suppressed by embedded Alt1. Replace with inline confirmation. Full recheck is staged in memory; prior durable snapshot remains intact until all visible slots pass validation. If stopped or reloaded mid-recheck, previous saved snapshot is restored; partial test progress is not durable. Regular incremental sync unchanged. DOM regression test checks confirm/cancel and preservation of previous snapshot. Live Alt1 behavior pending.
