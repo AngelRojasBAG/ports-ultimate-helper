@@ -1,0 +1,16 @@
+{
+  "appName": "Ports Ultimate Helper",
+  "description": "Asistente de Player-Owned Ports para RuneScape 3",
+  "appUrl": "./index.html",
+  "configUrl": "./appconfig.json",
+  "iconUrl": "./icon.svg",
+  "defaultWidth": 420,
+  "defaultHeight": 620,
+  "minWidth": 320,
+  "minHeight": 360,
+  "maxWidth": 1000,
+  "maxHeight": 1200,
+  "permissions": "pixel,gamestate",
+  "requestHandlers": [],
+  "activators": []
+}

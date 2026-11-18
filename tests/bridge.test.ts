@@ -1,0 +1,1 @@
+import {expect,it} from 'vitest';import {getStatus} from '../src/alt1/bridge';it('detects ordinary browser',()=>expect(getStatus(undefined).connected).toBe(false));it('reports permission separately',()=>expect(getStatus({permissionPixel:true}).pixel).toBe(true));it('does not assume game dimensions',()=>expect(getStatus({}).width).toBe(0));
