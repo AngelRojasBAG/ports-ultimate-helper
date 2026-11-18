@@ -1,0 +1,2 @@
+# v0.4.12
+Live user results: 23/24 values correct, negative Combat -10 read as 10 at x+4. Use fixed observed origins (-246,-126) from heading at scale 1, y 401/418, reject unknown prefixes rather than searching shifted digits. Recognize minus as isolated short horizontal stroke in 4-pixel prefix, then verified digit OCR. Shape is provisional pending real negative screenshot or live validation. Synthetic regression tests cover signed values, zero and unknown prefix. No writes or Tesseract runtime.
