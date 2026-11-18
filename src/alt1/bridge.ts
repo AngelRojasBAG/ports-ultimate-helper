@@ -8,6 +8,8 @@ export interface Alt1Api {
  permissionOverlay?: boolean;
  overLayRect?: (color:number,x:number,y:number,w:number,h:number,time:number,lineWidth:number)=>boolean;
  overLaySetGroup?: (group:string)=>void;
+ overLayFreezeGroup?: (group:string)=>void;
+ overLayContinueGroup?: (group:string)=>void;
  overLayClearGroup?: (group:string)=>void;
  rsLinked?: boolean;
  maxtransfer?: number;
