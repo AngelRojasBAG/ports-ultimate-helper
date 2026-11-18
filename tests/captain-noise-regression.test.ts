@@ -1,0 +1,2 @@
+import {it,expect} from 'vitest';import {readCaptainDetails} from '../src/core/ports-captain-details';
+it('ignores isolated bottom button pixels while retaining two substantive text bands',()=>{const rows=['111111','101101','111101','101101','111111','000000','000000','000000','000000','000000','111111','101111','111101','101111','111111'];const a={w:6,h:rows.length,bits:rows.join('')};const b={w:6,h:rows.length+3,bits:a.bits+'000000000000000010'};expect(readCaptainDetails(b,[{field:'details',text:'Cursed\nPersonality: Abrasive',mask:a}])?.personality).toBe('Abrasive');});

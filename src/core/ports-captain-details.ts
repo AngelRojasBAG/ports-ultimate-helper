@@ -22,13 +22,13 @@ export function bandScore(a:Mask,b:Mask){
  }return best;
 }
 export function readCaptainDetails(mask:Mask|null,samples:Sample[]){
- if(!mask)return null;const observed=bands(mask);
+ if(!mask)return null;const clean=(m:Mask)=>bands(m).filter(b=>m.h<15||(b.h>=5&&b.w>=5&&b.bits.replace(/0/g,'').length>=15));const observed=clean(mask);
  if(observed.length<2)return null;
  const candidates=new Map<string,{traitsText:string;personality:string;score:number}>();
  for(const s of samples){
  if(s.field!=='details'||!/^Personality:/im.test(s.text))continue;
  const parsed=parseDetails('',s.text,'captain');if(!parsed.traitsText||!parsed.personality)continue;
- const ref=bands(s.mask);if(ref.length!==observed.length)continue;
+ const ref=clean(s.mask);if(ref.length!==observed.length)continue;
  const score=Math.min(...ref.map((b,i)=>bandScore(observed[i],b)));
  const key=parsed.traitsText+'|'+parsed.personality;
  if(score>(candidates.get(key)?.score??-1))candidates.set(key,{traitsText:parsed.traitsText,personality:parsed.personality,score});
