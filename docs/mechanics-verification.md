@@ -1,0 +1,3 @@
+# v0.2.1 verification — 2026-11-18
+Indexed RuneScape Wiki excerpts (3–4 weeks old; direct access blocked): https://runescape.wiki/w/Player-owned_port , https://runescape.wiki/w/Player-owned_port/Buildings , https://runescape.wiki/w/Player-owned_port/Captains_and_crew .
+Ship slots and shared unlock rule, Shipwright and Warehouse percentages, partial traits and weakest-stat chance rule are supported. Costs with missing resource icons and individual ship parts available only from legacy Fandom were deliberately omitted. Final totals calculator does not apply bonuses or claim exact game rounding. Captain tiers previously recorded match retrieved table; no additional tiers in Scythe through Loop. Current game validation remains pending.

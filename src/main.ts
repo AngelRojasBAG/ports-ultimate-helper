@@ -1,10 +1,12 @@
+import {mountMechanics} from './components/mechanics';
+import {mountUpdate} from './components/update';
 import {mountCatalog} from './components/catalog';
 import './styles/main.css';
 import {getStatus,identify} from './alt1/bridge';
 import {loadSettings,saveSettings} from './core/storage';
 const root=document.querySelector<HTMLElement>('#app')!;
 const regions=['The Arc','The Skull','The Hook','The Scythe','The Bowl','The Pincers','The Loop','The Shield'];
-root.innerHTML=`<header><img src="./icon.svg" alt="" width="42"><div><h1>Ports Ultimate Helper</h1><small>RS3 · v0.2.0 · Catálogo</small></div></header><section><h2>Conexión con Alt1</h2><dl id="status"></dl><button id="refresh">Comprobar conexión</button><p id="hint"></p><a id="install">Agregar a Alt1</a></section><section><h2>Mi puerto</h2><label for="ships">Barcos disponibles</label><select id="ships"><option>1</option><option>2</option><option>3</option><option>4</option></select><label for="region">Región actual</label><select id="region"></select><button id="save">Guardar configuración</button><p id="saved" role="status"></p></section><section><h2>Próximos módulos</h2><p>Tripulación · Componentes · Expediciones · Optimizador</p><small>En desarrollo. Esta versión no captura imágenes ni controla el juego.</small></section>`;
+root.innerHTML=`<header><img src="./icon.svg" alt="" width="42"><div><h1>Ports Ultimate Helper</h1><small>RS3 · v0.2.1 · Catálogo</small></div></header><section><h2>Conexión con Alt1</h2><dl id="status"></dl><button id="refresh">Comprobar conexión</button><p id="hint"></p><a id="install">Agregar a Alt1</a></section><section><h2>Mi puerto</h2><label for="ships">Barcos disponibles</label><select id="ships"><option>1</option><option>2</option><option>3</option><option>4</option></select><label for="region">Región actual</label><select id="region"></select><button id="save">Guardar configuración</button><p id="saved" role="status"></p></section><section><h2>Próximos módulos</h2><p>Tripulación · Componentes · Expediciones · Optimizador</p><small>En desarrollo. Esta versión no captura imágenes ni controla el juego.</small></section>`;
 const status=root.querySelector('#status')!;
 const hint=root.querySelector('#hint')!;
 const ships=root.querySelector<HTMLSelectElement>('#ships')!;
@@ -18,3 +20,6 @@ root.querySelector('#save')!.addEventListener('click',()=>{const out=root.queryS
 try{identify();}catch{ /* Refresh remains available. */ }refresh();
 
 mountCatalog(root);
+
+mountMechanics(root);
+mountUpdate(root);
