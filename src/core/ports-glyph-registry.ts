@@ -38,7 +38,7 @@ export function learnedGlyphs(samples:Sample[],f:Family){return f==='details'?tr
 export function combinedFonts(samples:Sample[]){
  const entries=loadEntries(),old=cache.get(samples);if(old?.entries===entries)return old.fonts;
  const fonts={} as Record<Family,Glyph[]>;
- for(const f of families)fonts[f]=mergeGlyphs(learnedGlyphs(samples,f),entries.filter(e=>e.family===f));
+ for(const f of families)fonts[f]=f==='details'?[]:mergeGlyphs(learnedGlyphs(samples,f),entries.filter(e=>e.family===f));
  cache.set(samples,{entries,fonts});return fonts;
 }
 export function labelMask(mask:Mask,glyphs:Glyph[]){

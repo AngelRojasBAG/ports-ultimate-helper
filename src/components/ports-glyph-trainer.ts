@@ -3,8 +3,8 @@ import {findRosterAnchor} from '../core/roster-anchor';
 import {inspectGrid,selectedSlot} from '../core/crew-grid';
 import {extractMask,type Mask} from '../core/ports-text-patterns';
 import {splitGlyphs} from '../core/ports-glyph-font';
-import {detailLines} from '../core/ports-detail-lines';
-import {splitCoreLine} from '../core/ports-detail-characters';
+import {fullTraitRow} from '../core/ports-full-traits';
+
 import {combinedFonts,learnedGlyphs,saveEntry,labelMask,families,type Family} from '../core/ports-glyph-registry';
 import {loadSamples} from './ports-unified-reader';
 export function mountGlyphTrainer(root:HTMLElement){
@@ -14,7 +14,7 @@ export function mountGlyphTrainer(root:HTMLElement){
   const canvas=document.createElement('canvas');canvas.width=mask.w;canvas.height=mask.h;canvas.className='glyph-pixels';
   const ctx=canvas.getContext('2d')!;ctx.fillStyle='#222';ctx.fillRect(0,0,mask.w,mask.h);ctx.fillStyle='#fff';
   for(let i=0;i<mask.bits.length;i++)if(mask.bits[i]==='1')ctx.fillRect(i%mask.w,Math.floor(i/mask.w),1,1);
-  canvas.style.width=Math.min(144,mask.w*5)+'px';canvas.style.height=(mask.h*5)+'px';return canvas;
+  canvas.style.width=Math.min(400,mask.w*5)+'px';canvas.style.height='auto';return canvas;
  }
  sec.querySelector<HTMLButtonElement>('#glyph-view')!.onclick=()=>{
   try{library.replaceChildren();const fonts=combinedFonts(loadSamples());
@@ -32,10 +32,11 @@ export function mountGlyphTrainer(root:HTMLElement){
    let missing=0;
    for(const [f,dx,dy,w,h] of regions){
     const mask=extractMask(frame,a.x+dx,a.y+dy,w,h,f);if(!mask)continue;
-    const lines=f==='details'?detailLines(mask,slot.kind).map(m=>splitCoreLine(m)):[splitGlyphs(f,mask)];
+    if(f==='details'){const block=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Traits · vista completa (sin calibración individual)';block.append(summary);const row=fullTraitRow(mask);const msg=document.createElement('p');msg.textContent='Fragmentos de 7 px desactivados. Vista del primer renglón completo, incluyendo ascendentes y descendentes.';block.append(msg,image(row??mask));tasks.append(block);continue;}
+    const lines=[splitGlyphs(f,mask)];
     const block=document.createElement('details');block.open=true;const summary=document.createElement('summary');summary.textContent=f;block.append(summary);
     for(const [lineNo,parts] of lines.entries()){
-     const caption=document.createElement('p');caption.textContent='Línea '+(lineNo+1)+' · '+(parts.map(p=>labelMask(p.mask,fonts[f])??'?').join('')||'Sin segmentar');block.append(caption);
+     const caption=document.createElement('p');caption.textContent='Línea '+(lineNo+1)+' · '+(parts.map(p=>labelMask(p.mask,fonts[f])??'?').join('')||'Sin segmentar');block.append(caption,image(mask));
      parts.forEach((part,index)=>{
       if(labelMask(part.mask,fonts[f])!==null)return;
       missing++;
