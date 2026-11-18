@@ -9,6 +9,7 @@ export interface Alt1Api {
  maxtransfer?: number;
  capture?: (x:number,y:number,w:number,h:number)=>Uint8ClampedArray;
  bindRegion?: (x:number,y:number,w:number,h:number)=>number;
+ bindReadString?: (id:number,font:string,x:number,y:number)=>string;
  bindGetRegion?: (id:number,x:number,y:number,w:number,h:number)=>string;
 }
 declare global { interface Window { alt1?: Alt1Api } }
