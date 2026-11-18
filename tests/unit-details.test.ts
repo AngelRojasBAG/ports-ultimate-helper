@@ -1,0 +1,4 @@
+import {it,expect} from 'vitest';import {parseDetails} from '../src/core/unit-details';import {exportRoster,importRoster} from '../src/core/roster-backup';
+it('recognizes explicit assignment and known trait',()=>{expect(parseDetails('3','Cowardly\nOnce wrestled a moral dilemma.','crew')).toEqual({assignedShip:3,assignmentKnown:true,traitsText:'Cowardly',personality:null});});
+it('does not infer unknown values',()=>{const r=parseDetails('O','Unknown text','crew');expect(r.assignmentKnown).toBe(false);expect(r.traitsText).toBeNull();});
+it('roundtrips empty snapshot and rejects malformed backups',()=>{const map=new Map<string,string>();const store={getItem:(k:string)=>map.get(k)??null,setItem:(k:string,v:string)=>{map.set(k,v)}} as Storage;const s={records:{},grid:[],savedAt:''};expect(importRoster(store,exportRoster(s))).toEqual(s);expect(()=>importRoster(store,'{}')).toThrow();});

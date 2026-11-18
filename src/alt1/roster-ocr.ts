@@ -25,3 +25,12 @@ export async function readPanel(frame:ImageData,a:RosterAnchor){const r=panelBou
  const res=await w.recognize(clean);
  const name=nameResult.data.text.trim().replace(/\s+/g,' ');
  return {text:name+'\n'+res.data.text,confidence:Math.min(nameResult.data.confidence,res.data.confidence),preview:out};}
+
+export async function readDetails(frame:ImageData,a:RosterAnchor){
+ const src=document.createElement('canvas');src.width=frame.width;src.height=frame.height;src.getContext('2d')!.putImageData(frame,0,0);
+ function crop(dx:number,dy:number,w:number,h:number){const x=Math.round(a.x+dx*a.scale),y=Math.round(a.y+dy*a.scale),ww=Math.round(w*a.scale),hh=Math.round(h*a.scale);if(x<0||y<0||x+ww>frame.width||y+hh>frame.height)throw Error('Detalle fuera de pantalla.');const c=document.createElement('canvas');c.width=ww*4;c.height=hh*4;c.getContext('2d')!.drawImage(src,x,y,ww,hh,0,0,c.width,c.height);return c;}
+ const w=await getWorker();
+ const trait=await w.recognize(crop(-315,436,270,39));
+ await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_LINE});
+ try{const assignment=await w.recognize(crop(-384,338,31,23));return {traits:trait.data.confidence>=75?trait.data.text:'',assignment:assignment.data.confidence>=75?assignment.data.text:''};}finally{await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_BLOCK});}
+}

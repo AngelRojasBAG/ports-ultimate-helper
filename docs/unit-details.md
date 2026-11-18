@@ -1,0 +1,2 @@
+# v0.4.0
+Optional experimental additional OCR: selected panel assignment marker and trait lines; known exact traits only, unknown text remains pending. Assignment is not voyage availability. Existing core reader unchanged when option off; existing snapshots compatible. Additional OCR requires live crop validation and will take longer. JSON backup export/import for saved roster only; previous snapshot backed up before import. Imported details are not verified against game. Fleet availability and permanent identity remain pending. No game input.
