@@ -1,0 +1,2 @@
+# v0.4.9
+Initial live trial v0.4.8: 14 fonts in 235 ms, chatbox/12pt reads Misery Guts, Plucky, correctly; other fields not reliably recognized. Split stat columns provisionally at midpoint, extend trait crop, derive candidate RGB colors from foreground pixels, search each color separately over wider baseline and horizontal probes, display top heuristic-ranked raw candidates and detected bands. Ranking is not confidence or automatic validation. No data writes; no Tesseract runtime. Wider search may be substantially slower; geometry and colors need live verification.
