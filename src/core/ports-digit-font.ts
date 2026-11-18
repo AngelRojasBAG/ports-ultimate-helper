@@ -14,6 +14,7 @@ export const digitRows:Record<string,string>={
 };
 // Green variants measured from the supplied Golden Katana screenshot.
 export const greenDigitRows:Record<string,string>={
+ '7':'1111110/0000110/0000100/0000100/0001100/0001000/0011000/0010000/0110000',
  '8':'0111000/1001100/1000100/1101000/0111000/1001100/1000100/1001100/0111000',
  '6':'0111000/0100000/1000000/1111000/1101100/1000100/1000100/1101100/0111000'
 };

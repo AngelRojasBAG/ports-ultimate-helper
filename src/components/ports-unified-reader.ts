@@ -62,6 +62,7 @@ export function mountUnifiedReader(root:HTMLElement){
     let value=mask?decodeGlyphs(field,mask,glyphs,engine):null;
     let source='Alt1 caracteres';
     const exact=matchSample(samples,field,mask)??(field==='title'?matchTitleWithNoise(mask,samples):null);
+    if(field==='title'&&value===null&&mask)numericDebug.push('Nombre máscara '+mask.w+'x'+mask.h+' · '+mask.bits);
     if(value!==null&&exact!==null&&value.toUpperCase()!==exact.toUpperCase()){value=null;source='Conflicto';}
     else if(value===null&&exact!==null){value=exact;source=field==='title'?'Patrón de nombre verificado':'Patrón registrado';}
     if(field==='title'&&slot.kind==='crew'&&value&&!knownCrewName(value)){value=null;source='Nombre fuera del catálogo';}
