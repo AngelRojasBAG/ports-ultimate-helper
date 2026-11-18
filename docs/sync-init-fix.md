@@ -1,0 +1,2 @@
+# v0.3.9
+Fix temporal dead zone: listSaved() accessed records before its let declaration when storage was populated, preventing mount from attaching event handlers. Initialize records first. Add visible startup status and DOM regression tests for populated and empty storage. Existing storage keys and records unchanged. Live validation pending.
