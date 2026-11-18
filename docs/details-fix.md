@@ -1,0 +1,2 @@
+# v0.4.1
+Screenshot confirms 24 restored and some details recognised. Trailing comma in wrapped captain traits previously invalidated the first line. Allow trailing commas, widen trait crop vertically, normalize dash variants and attempt conservative visual detection of the free marker. Show raw detail OCR and separate completeness count; green remains basic stats only. Real capture crop and dash heuristic need validation. No storage reset.

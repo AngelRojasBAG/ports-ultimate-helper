@@ -30,7 +30,18 @@ export async function readDetails(frame:ImageData,a:RosterAnchor){
  const src=document.createElement('canvas');src.width=frame.width;src.height=frame.height;src.getContext('2d')!.putImageData(frame,0,0);
  function crop(dx:number,dy:number,w:number,h:number){const x=Math.round(a.x+dx*a.scale),y=Math.round(a.y+dy*a.scale),ww=Math.round(w*a.scale),hh=Math.round(h*a.scale);if(x<0||y<0||x+ww>frame.width||y+hh>frame.height)throw Error('Detalle fuera de pantalla.');const c=document.createElement('canvas');c.width=ww*4;c.height=hh*4;c.getContext('2d')!.drawImage(src,x,y,ww,hh,0,0,c.width,c.height);return c;}
  const w=await getWorker();
- const trait=await w.recognize(crop(-315,436,270,39));
+ const trait=await w.recognize(crop(-315,436,270,47));
  await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_LINE});
- try{const assignment=await w.recognize(crop(-384,338,31,23));return {traits:trait.data.confidence>=75?trait.data.text:'',assignment:assignment.data.confidence>=75?assignment.data.text:''};}finally{await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_BLOCK});}
+ try{
+ const marker=crop(-382,338,24,20);
+ const ctx=marker.getContext('2d')!;
+ const im=ctx.getImageData(0,0,marker.width,marker.height);
+ // A free-unit marker is a small, isolated horizontal white stroke. Do not infer free from empty OCR.
+ let minX=marker.width,minY=marker.height,maxX=-1,maxY=-1,count=0;
+ for(let y=0;y<marker.height;y++)for(let x=0;x<marker.width;x++){const i=(y*marker.width+x)*4;const r=im.data[i],g=im.data[i+1],b=im.data[i+2];if(Math.min(r,g,b)>145&&Math.max(r,g,b)-Math.min(r,g,b)<45){minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);count++;}}
+ const ww=maxX-minX+1,hh=maxY-minY+1;
+ const dash=count>0&&ww>=8*a.scale&&ww<=32*a.scale&&hh>=2*a.scale&&hh<=12*a.scale&&ww/hh>=2&&count/(ww*hh)>.35&&minX>0&&minY>0&&maxX<marker.width-1&&maxY<marker.height-1;
+ const assignment=dash?null:await w.recognize(marker);
+ return {traits:trait.data.confidence>=75?trait.data.text:'',assignment:dash?'-':assignment&&assignment.data.confidence>=75?assignment.data.text:'',rawTraits:trait.data.text,rawAssignment:dash?'-':assignment?.data.text??''};
+ }finally{await w.setParameters({tessedit_pageseg_mode:PSM.SINGLE_BLOCK});}
 }
