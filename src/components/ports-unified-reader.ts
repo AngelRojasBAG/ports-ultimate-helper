@@ -1,3 +1,4 @@
+import {mountVerifiedRoster} from './ports-verified-roster';
 import {observedFields} from '../core/ports-observed-fields';
 import {titleSeeds} from '../core/ports-title-seeds';
 import {traitRows,readDualTrait,loadTraitSamples} from '../core/ports-trait-dual';
@@ -30,8 +31,9 @@ export function loadSamples():Sample[]{
 }
 export function mountUnifiedReader(root:HTMLElement){
  const sec=document.createElement('section');
- sec.innerHTML='<h2>Leer unidad seleccionada</h2><p>Selecciona una unidad en Crew Roster. Una captura, todos los campos, sin modificar registros.</p><button>Leer unidad</button><label><input type="checkbox" class="auto-unit"> Lectura automática (solo diagnóstico)</label><p role="status" aria-live="polite"></p><dl class="unit-result"></dl><button class="copy-unit" disabled>Copiar resultado</button>';
+ sec.innerHTML='<h2>Leer unidad seleccionada</h2><p>Selecciona una unidad en Crew Roster. Lee los atributos. El guardado local es opcional.</p><button>Leer unidad</button><label><input type="checkbox" class="auto-unit"> Lectura automática</label><p role="status" aria-live="polite"></p><dl class="unit-result"></dl><button class="copy-unit" disabled>Copiar resultado</button>';
  root.append(sec);
+ const sync=mountVerifiedRoster(sec);
  const button=sec.querySelector('button')!,out=sec.querySelector('dl')!,status=sec.querySelector<HTMLElement>('[role=status]')!,copy=sec.querySelector<HTMLButtonElement>('.copy-unit')!;
  let report='',lastKey='',stableKey='',stableCount=0,busy=false;
  const auto=sec.querySelector<HTMLInputElement>('.auto-unit')!;
@@ -45,13 +47,14 @@ export function mountUnifiedReader(root:HTMLElement){
    if(!engine?.readChar)throw Error('OCR no disponible.');
    const samples=loadSamples(),frame=captureGame(window.alt1),a=findRosterAnchor(frame);
    if(!a||a.scale!==1)throw Error('Abre Crew Roster a escala 100%.');
-   const slot=selectedSlot(inspectGrid(frame,a));if(!slot)throw Error('Selecciona una unidad inequívoca.');
+   const slots=inspectGrid(frame,a),slot=selectedSlot(slots);if(!slot)throw Error('Selecciona una unidad inequívoca.');
    const t=performance.now();
    if(automatic&&!auto.checked)return;
    // Hash the complete panel, not just the slot, to detect changes in place.
    let hash=2166136261;for(let y=a.y+338;y<a.y+483;y++)for(let x=a.x-382;x<a.x-20;x++){const i=(y*frame.width+x)*4;hash=Math.imul(hash^frame.data[i]^frame.data[i+1]<<8^frame.data[i+2]<<16,16777619);}
    const key=slot.id+'/'+slot.fingerprint+'/'+hash;
-   if(automatic){if(key!==stableKey){stableKey=key;stableCount=1;return;}if(++stableCount<2||key===lastKey)return;}
+   if(automatic){if(key!==stableKey){stableKey=key;stableCount=1;sync.reset();return;}if(++stableCount<2)return;if(key===lastKey&&!sync.enabled.checked)return;}
+   if(automatic&&sync.enabled.checked&&key===lastKey&&stableCount>3){sync.refresh(slots);return;}
    lastKey=key;copy.disabled=true;out.replaceChildren();report='';
    const verifiedSamples=[...samples,...observedFields];
    const fonts=combinedFonts(samples);
@@ -90,6 +93,7 @@ export function mountUnifiedReader(root:HTMLElement){
     const conflict=new Set(values.map(v=>v.toLowerCase())).size>1;
     push(label,conflict?null:values[0]??null,conflict?'Conflicto':independent?.[key]?'Alt1 caracteres':key==='traitsText'&&dual?.value?(dual.method==='characters'?'Alt1 caracteres 90+110':'Patrón verificado 90+110'):known?.[key]?'Patrón registrado':key==='traitsText'&&full?'Patrón de línea completa':lines?.[key]?'Patrón por línea':'Sin coincidencia');
    }
+   if(automatic&&sync.enabled.checked)sync.accept(slots,slot,rows);else sync.refresh(slots);
    const complete=rows.filter(r=>r.value!==null).length;
    for(const r of rows){
     const dt=document.createElement('dt'),dd=document.createElement('dd'),small=document.createElement('small');
@@ -97,10 +101,11 @@ export function mountUnifiedReader(root:HTMLElement){
    }
    status.textContent='Casilla '+slot.id+' · '+complete+'/'+rows.length+' campos · '+Math.round(performance.now()-t)+' ms · Solo lectura';
    report=status.textContent+'\n'+rows.map(r=>r.label+': '+(r.value??'Pendiente')+' ['+r.source+']').join('\n')+'\n'+numericDebug.join('\n');copy.disabled=false;
-  }catch(e){lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent=String(e)}finally{button.disabled=false;busy=false}
+  }catch(e){sync.pause();lastKey='';stableKey='';stableCount=0;out.replaceChildren();copy.disabled=true;status.textContent=String(e)}finally{button.disabled=false;busy=false}
  }
  button.onclick=()=>void run();
  let timer:number|undefined;
- auto.onchange=()=>{if(timer!==undefined)window.clearInterval(timer);timer=undefined;lastKey='';stableKey='';stableCount=0;if(auto.checked){timer=window.setInterval(()=>{if(sec.closest('details')?.open!==false)void run(true)},600);void run(true);}};
+ sync.enabled.onchange=()=>{sync.reset();lastKey='';stableKey='';stableCount=0;sync.status.textContent=sync.enabled.checked?'Selecciona unidades para sincronizar.':'Sincronización desactivada.';if(sync.enabled.checked){auto.checked=true;auto.dispatchEvent(new Event('change'));}};
+ auto.onchange=()=>{if(!auto.checked){sync.enabled.checked=false;sync.reset();sync.status.textContent='Sincronización desactivada.';}if(timer!==undefined)window.clearInterval(timer);timer=undefined;lastKey='';stableKey='';stableCount=0;if(auto.checked){timer=window.setInterval(()=>{if(sec.closest('details')?.open!==false)void run(true);else{sync.reset();lastKey='';stableKey='';stableCount=0;}},600);void run(true);}};
  copy.onclick=async()=>{try{await navigator.clipboard.writeText(report);status.textContent='Diagnóstico copiado.'}catch{const ta=document.createElement('textarea');ta.value=report;ta.rows=10;sec.append(ta);ta.select()}};
 }
