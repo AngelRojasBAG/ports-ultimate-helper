@@ -1,0 +1,2 @@
+# v0.4.10
+Fix v0.4.9 source corruption caused by string replacement interpreting a dollar-sign replacement sequence. Reconstruct scoreText and the single calibrated mount function through explicit string slicing. No changes to calibration algorithm, data storage or OCR engine.

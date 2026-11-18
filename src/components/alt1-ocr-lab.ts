@@ -43,11 +43,19 @@ function pixelColors(img:ImageData,w:number,h:number,palette:string):Color[]{
  return result;
 }
 function scoreText(text:string,field:string){
- const letters=(text.match(/[a-z]/gi)||[]).length,digits=(text.match(/\d/g)||[]).length,noise=(text.match(/[^a-z0-9 ,.:\-]/gi)||[]).length;
+ const letters=(text.match(/[a-z]/gi)||[]).length;
+ const digits=(text.match(/\d/g)||[]).length;
+ const noise=(text.match(/[^a-z0-9 ,.:\-]/gi)||[]).length;
  if(field==='Barco')return /^[1-4-]$/.test(text)?100:0;
  if(field==='Nivel')return /^level\s+(?:10|[1-9])$/i.test(text)?100:letters+digits-noise*3;
  if(['Morale','Combat','Seafaring','Speed'].includes(field)){
-  const re=new RegExp('^'+field+'\\s*:?\\s*[−-]?\\d[\\d,]*(root:HTMLElement){
+  const re=new RegExp('^'+field+'\\s*:?\\s*[−-]?\\d[\\d,]*$','i');
+  if(re.test(text))return 100;
+  if(/^[−-]?\d[\d,]*$/.test(text))return 30+digits;
+ }
+ return letters+digits-noise*3;
+}
+export function mountAlt1Lab(root:HTMLElement){
  const section=document.createElement('section');section.className='assistant';section.innerHTML='<h2>Laboratorio OCR · Solo Alt1</h2><p>Selecciona una unidad en Crew Roster y pulsa Analizar. Se prueban fuentes de Alt1 con colores de la captura y búsqueda ampliada de posiciones. Sin Tesseract. No se escribe en tu registro.</p><button id="alt1-lab-run">Analizar unidad seleccionada</button><p id="alt1-lab-status" role="status"></p><div id="alt1-lab-output"></div>';root.append(section);
  const btn=section.querySelector<HTMLButtonElement>('#alt1-lab-run')!,status=section.querySelector<HTMLElement>('#alt1-lab-status')!,output=section.querySelector<HTMLElement>('#alt1-lab-output')!;
  btn.onclick=async()=>{btn.disabled=true;output.replaceChildren();status.textContent='Cargando fuentes especializadas…';try{const {ocr,fonts}=await load();const frame=captureGame(window.alt1),a=findRosterAnchor(frame);if(!a)throw Error('Abre Crew Roster con el panel completo visible.');const started=performance.now();for(const r of regions){status.textContent='Analizando '+r.name+'…';const {out,w,h}=crop(frame,a,r);const group=document.createElement('details');group.open=true;const heading=document.createElement('summary');heading.textContent=r.name;group.append(heading);const canvas=document.createElement('canvas');canvas.width=out.width;canvas.height=out.height;canvas.getContext('2d')!.putImageData(out,0,0);canvas.style.maxWidth='100%';group.append(canvas);const rows=bands(out,w,h);
@@ -83,25 +91,6 @@ function scoreText(text:string,field:string){
   const line=document.createElement('p');line.textContent=c.font+': '+c.text+' ['+c.where+']';group.append(line);
  }
  if(!ranked.length){const line=document.createElement('p');line.textContent='Sin candidatos legibles.';group.append(line);}
- output.append(group);await new Promise<void>(resolve=>window.setTimeout(resolve,0));}
- status.textContent='Prueba terminada: '+fonts.length+' fuentes, '+Math.round(performance.now()-started)+' ms de análisis total. Sin guardar datos.';}catch(e){status.textContent=String(e)}finally{btn.disabled=false}};
-}
-,'i');
-  if(re.test(text))return 100;
-  if(/^[−-]?\d[\d,]*$/.test(text))return 30+digits;
- }
- return letters+digits-noise*3;
-}
-
-export function mountAlt1Lab(root:HTMLElement){
- const section=document.createElement('section');section.className='assistant';section.innerHTML='<h2>Laboratorio OCR · Solo Alt1</h2><p>Selecciona una unidad en Crew Roster y pulsa Analizar. Se prueban las fuentes de Alt1 sin Tesseract. No se escribe en tu registro.</p><button id="alt1-lab-run">Analizar unidad seleccionada</button><p id="alt1-lab-status" role="status"></p><div id="alt1-lab-output"></div>';root.append(section);
- const btn=section.querySelector<HTMLButtonElement>('#alt1-lab-run')!,status=section.querySelector<HTMLElement>('#alt1-lab-status')!,output=section.querySelector<HTMLElement>('#alt1-lab-output')!;
- btn.onclick=async()=>{btn.disabled=true;output.replaceChildren();status.textContent='Cargando fuentes especializadas…';try{const {ocr,fonts}=await load();const frame=captureGame(window.alt1),a=findRosterAnchor(frame);if(!a)throw Error('Abre Crew Roster con el panel completo visible.');const started=performance.now();for(const r of regions){status.textContent='Analizando '+r.name+'…';const {out,w,h}=crop(frame,a,r);const group=document.createElement('details');group.open=true;const heading=document.createElement('summary');heading.textContent=r.name;group.append(heading);const canvas=document.createElement('canvas');canvas.width=out.width;canvas.height=out.height;canvas.getContext('2d')!.putImageData(out,0,0);canvas.style.maxWidth='100%';group.append(canvas);const rows=bands(out,w,h);
- for(const {name,font} of fonts){try{const results:string[]=[];for(const row of rows){const palette=r.palette==='gold'?gold:r.palette==='white'?white:[...gold,...white];const x=Math.max(0,row.minX-2),end=Math.min(out.width-font.width,row.maxX+1);const y=Math.max(font.basey,row.last-3),bottom=Math.min(out.height-font.height+font.basey,row.last+7);if(end<=x||bottom<=y)continue;
- // Search near the first visible glyph; keep competing font results separate.
- const text=ocr.findReadLine(out,font,palette,x,y,Math.min(end-x,Math.max(12,font.width*2)),bottom-y).text.trim();if(text)results.push(text);}
- const line=document.createElement('p');line.textContent=name+': '+(results.join(' / ')||'—');group.append(line);
- }catch(e){const line=document.createElement('p');line.textContent=name+': '+String(e);group.append(line)}}
  output.append(group);await new Promise<void>(resolve=>window.setTimeout(resolve,0));}
  status.textContent='Prueba terminada: '+fonts.length+' fuentes, '+Math.round(performance.now()-started)+' ms de análisis total. Sin guardar datos.';}catch(e){status.textContent=String(e)}finally{btn.disabled=false}};
 }
