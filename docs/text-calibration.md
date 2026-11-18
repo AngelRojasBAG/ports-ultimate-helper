@@ -1,0 +1,2 @@
+# v0.4.13
+Adds read-only roster field calibration with local exact whole-region binary pattern matching, manual user-confirmed training, and JSON exchange. Not yet a character-level Alt1 FontDefinition for text: numeric lab remains the only validated custom OCR font. No automatic roster synchronization, no Tesseract runtime, no modifications to existing roster keys. Text masks may include extraneous pixels and require calibration per visual variant. Reject conflicting labels; unknown masks remain pending. Tests exercise masking and conflict guard, not live screenshots.
