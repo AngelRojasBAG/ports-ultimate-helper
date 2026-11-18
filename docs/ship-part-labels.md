@@ -1,0 +1,2 @@
+# v0.4.36
+Ship 2 and 3 names, ship number 2/3, 8/9, disabled EDIT CREW and underway text measured from PNGs. Previous icon patch was identical across equipped parts; removed it to prevent incorrect candidate labels. Bright label masks now used, exact matching conservative and background-sensitive. No automatic saving. Unknown components remain null. ETA, voyage percentages and unlocked catalog pending. No changes to roster.

@@ -11,7 +11,7 @@ export function mountShips(root:HTMLElement){
  const field=(name:string)=>form.elements.namedItem(name) as HTMLInputElement;
  function render(){
  const count=loadSettings().ships;if(selected>count)selected=1;
- summary.textContent=records.filter(s=>s.id<=count).length+'/'+count+' fichas registradas · lectura experimental';
+ summary.textContent=records.filter(s=>s.id<=count).length+'/'+count+' fichas registradas · lector visual';
  tabs.replaceChildren();for(let i=1;i<=count;i++){const b=document.createElement('button');b.type='button';b.textContent='Barco '+i;b.setAttribute('aria-pressed',String(i===selected));b.onclick=()=>{selected=i;render()};tabs.append(b);}
  const s=records.find(s=>s.id===selected);field('name').value=s?.name??'';componentNames.forEach((_,i)=>field('part'+i).value=s?.components[i]??'');shipStats.forEach((_,i)=>field('stat'+i).value=s?String(s.totals[i]):'');
  card.replaceChildren();
