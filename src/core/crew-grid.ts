@@ -1,3 +1,4 @@
+import {isSelectionYellow} from './selection-guard';
 import type {PixelFrame,RosterAnchor} from './roster-anchor';
 export interface Slot {id:string;kind:'captain'|'crew';x:number;y:number;w:number;h:number;selected:boolean;fingerprint:string;selectionScore?:number}
 function rgb(f:PixelFrame,x:number,y:number){const i=(Math.round(y)*f.width+Math.round(x))*4;return [f.data[i]||0,f.data[i+1]||0,f.data[i+2]||0]}
@@ -14,7 +15,7 @@ export function inspectGrid(f:PixelFrame,a:RosterAnchor):Slot[]{
   let score=0;
   for(const d of [-4,-3,-2,-1,0,1,2,3,4]){
    const hx=w/2+d*s,hy=h/2+d*s;
-   for(let edge=0;edge<4;edge++){let run=0,best=0;for(let k=0;k<25;k++){const t=(k/24-.5)*.76;const xx=edge<2?cx+t*w:cx+(edge===2?-hx:hx);const yy=edge<2?cy+(edge===0?-hy:hy):cy+t*h;const [r,g,b]=rgb(f,xx,yy);if(r>185&&g>135&&b<105&&r-b>100&&g-b>65){run++;best=Math.max(best,run)}else run=0}score=Math.max(score,best)}
+   for(let edge=0;edge<4;edge++){let run=0,best=0;for(let k=0;k<25;k++){const t=(k/24-.5)*.76;const xx=edge<2?cx+t*w:cx+(edge===2?-hx:hx);const yy=edge<2?cy+(edge===0?-hy:hy):cy+t*h;const [r,g,b]=rgb(f,xx,yy);if(isSelectionYellow(r,g,b)){run++;best=Math.max(best,run)}else run=0}score=Math.max(score,best)}
   }
   slots.push({id:row+':'+col,kind:col===0?'captain':'crew',x,y,w,h,selected:false,selectionScore:score,fingerprint:sig.join('.')});
  }
