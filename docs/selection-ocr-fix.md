@@ -1,0 +1,2 @@
+# v0.3.7
+Screenshot shows 11/20 crew, 3/4 captains, truncated Golden Katana Clansman title. Widen title only, preserve stats crop. Reject unknown crew names; no guessed correction; incomplete catalog may reject legitimate units. Clear overlay before capture to reduce possible interference. Show ambiguous selection scores and avoid stale OCR text in that case. Exact cause of repeat stall not yet established. Existing experimental records are not certified; new session starts fresh. Live validation pending.

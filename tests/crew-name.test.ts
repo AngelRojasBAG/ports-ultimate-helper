@@ -1,0 +1,1 @@
+import {it,expect} from 'vitest';import {knownCrewName} from '../src/core/crew-name';it('rejects clipped names rather than storing them',()=>{expect(knownCrewName('OLDEN KATANA CLANSMAN')).toBe(false);expect(knownCrewName('GOLDEN KATANA CLANSMAN')).toBe(true)});
