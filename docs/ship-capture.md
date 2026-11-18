@@ -1,0 +1,2 @@
+# v0.4.33
+Separate ship records and configurable ship count. Manual totals are whole displayed ship totals including crew/bonuses, not additive base inputs. Five component slots recorded as text pending visual recognition. Read-only full game screenshot capture and PNG export for calibration; no automatic ship identification or OCR claimed. Roster storage and OCR unchanged. Tests validate manual records and preservation of other ships. Capture images are not uploaded automatically.
