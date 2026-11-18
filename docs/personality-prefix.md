@@ -1,0 +1,2 @@
+# v0.4.3
+Observed OCR line `2 Personality:calm` rejected because parser required label at start. Allow a single digit followed by whitespace before explicit label, normalize letter case, reject malformed or multiple personality lines. No guessed personality and no storage reset. Existing known trait recognition unchanged; live OCR validation pending.
