@@ -1,3 +1,5 @@
+import {trainGlyphs,decodeGlyphs,type GlyphEngine} from '../core/ports-glyph-font';
+import {loadAlt1OCR} from './alt1-ocr-lab';
 import {captureGame} from '../alt1/capture';
 import {findRosterAnchor} from '../core/roster-anchor';
 import {inspectGrid,selectedSlot} from '../core/crew-grid';
@@ -23,9 +25,12 @@ export function mountTextCalibration(root:HTMLElement){
  function decode(raw:string){const x:unknown=JSON.parse(raw);if(!Array.isArray(x)||x.length>1000||!x.every(valid))throw Error('Archivo de patrones inválido.');let result:Sample[]=[];for(const a of x)result=addSample(result,a);return result;}
  try{samples=decode(localStorage.getItem(KEY)??'[]')}catch{status.textContent='No se pudieron recuperar los patrones anteriores.'}
  function persist(next:Sample[]){localStorage.setItem(KEY,JSON.stringify(next));samples=next;}
- sec.querySelector<HTMLButtonElement>('#pt-capture')!.onclick=()=>{
+ sec.querySelector<HTMLButtonElement>('#pt-capture')!.onclick=async()=>{
   fields.replaceChildren();
   try{
+   await loadAlt1OCR();
+   const engine=(window as Window&{OCR?:GlyphEngine}).OCR;
+   if(!engine?.readChar)throw Error('OCR.readChar no disponible.');
    const frame=captureGame(window.alt1),a=findRosterAnchor(frame);
    if(!a||a.scale!==1)throw Error('Abre Crew Roster a escala 100%.');
    const slot=selectedSlot(inspectGrid(frame,a));
@@ -40,6 +45,15 @@ export function mountTextCalibration(root:HTMLElement){
     canvas.getContext('2d')!.putImageData(img,0,0);block.append(canvas);
     const value=matchSample(samples,r.field,mask);
     const result=document.createElement('p');result.textContent=value===null?'Pendiente de calibración':'Coincidencia exacta: '+value;block.append(result);
+    if(r.field!=='details'){
+     const glyphs=trainGlyphs(samples,r.field);
+     // Leave the entire current label out of training: an independent test
+     // must not merely reproduce the currently registered word.
+     const independent=trainGlyphs(samples.filter(s=>s.field!==r.field||s.text.toUpperCase()!==value?.toUpperCase()),r.field);
+     const read=decodeGlyphs(r.field,mask,glyphs,engine);
+     const unseen=decodeGlyphs(r.field,mask,independent,engine);
+     const report=document.createElement('p');report.textContent='Alt1 caracteres: '+(read??'Pendiente')+' · Prueba sin etiqueta actual: '+(unseen??'Pendiente')+' · Cobertura: '+[...new Set(glyphs.map(g=>g.chr))].sort().join(' ');block.append(report);
+    }
     const input=document.createElement('textarea');input.rows=r.field==='details'?3:1;input.value=value??'';input.placeholder=r.field==='level'?'Solo el número':r.field==='ship'?'1, 2, 3, 4 o -':'Transcribe el recorte';block.append(input);
     const save=document.createElement('button');save.textContent='Registrar patrón';save.onclick=()=>{try{const text=input.value.trim();persist(addSample(samples,{field:r.field,text,mask}));result.textContent='Patrón registrado: '+text;status.textContent=samples.length+' patrones locales.';}catch(e){status.textContent=String(e)}};block.append(save);fields.append(block);
    }
