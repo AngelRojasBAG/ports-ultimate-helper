@@ -6,12 +6,13 @@ export function findRosterAnchor(frame:PixelFrame):RosterAnchor|null{
  const {width:w,height:h,data}=frame;if(w<104||h<13||data.length!==w*h*4)return null;
  const gold=new Uint8Array(w*h);for(let i=0,j=0;i<data.length;i+=4,j++){const r=data[i],g=data[i+1],b=data[i+2];gold[j]=+(r>120&&g>85&&r-b>35&&g-b>15)}
  let best:RosterAnchor|null=null;
+ let bestScore=0;
  for(const scale of [1,.8,1.25,1.5, .9,1.1]){
  const tw=Math.ceil(104*scale),th=Math.ceil(13*scale);if(tw>w||th>h)continue;
  const points:number[]=[],neg:number[]=[];for(let y=0;y<13;y++)for(let x=0;x<104;x++){const pos=Math.round(y*scale)*w+Math.round(x*scale);(mask[y][x]==='1'?points:neg).push(pos)}
  const probe=points.filter((_,i)=>i%Math.max(1,Math.floor(points.length/12))===0);
- for(let y=0;y<=h-th;y++)for(let x=0;x<=w-tw;x++){const start=y*w+x;let n=0;for(const q of probe)n+=gold[start+q]||0;if(n<probe.length*.82)continue;let yes=0,no=0;for(const q of points)yes+=gold[start+q]||0;for(const q of neg)no+=1-(gold[start+q]||0);const score=(yes/points.length+no/neg.length)/2;if(score>=.91&&(!best||score>best.score))best={x:x+52*scale,y:y+6*scale,scale,score};}
- if(best&&best.score>=.97)return best;
+ for(let y=0;y<=h-th;y++)for(let x=0;x<=w-tw;x++){const start=y*w+x;let n=0;for(const q of probe)n+=gold[start+q]||0;if(n<probe.length*.82)continue;let yes=0,no=0;for(const q of points)yes+=gold[start+q]||0;for(const q of neg)no+=1-(gold[start+q]||0);const score=(yes/points.length+no/neg.length)/2;if(score>=.91&&score>bestScore){bestScore=score;best={x:x+52*scale,y:y+6*scale,scale,score};}}
+ if(bestScore>=.97)return best;
  }
  return best;
 }
