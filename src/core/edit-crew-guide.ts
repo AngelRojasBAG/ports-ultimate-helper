@@ -15,7 +15,7 @@ export function editAnchor(f:PixelFrame){
 // Eight-pixel white level glyphs measured from the Edit Crew PNG of 19 Nov.
 const levelMasks:Record<number,string>={3:'0110/1001/0001/0110/0001/0001/1001/0110',5:'1111/1000/1000/1110/0001/0001/1001/0110',6:'00110/01001/10000/10110/11001/10001/10001/01110',7:'1111/0001/0010/0010/0100/0100/1000/1000',8:'01110/10001/10001/01110/10001/10001/10001/01110'};
 export function readIconLevel(f:PixelFrame,cx:number,cy:number,row:number,captain:boolean):number|null{
- const x=cx+(captain?9:13),y=cy+(row===0?9:row===3?7:9),w=captain?14:10;
+ const x=cx+(row===0?9:captain?9:13),y=cy+(row===0?6:row===3?7:9),w=row===0?10:captain?14:10;
  if(x<0||y<0||x+w>f.width||y+8>f.height)return null;
  const rows=Array.from({length:8},(_,j)=>Array.from({length:w},(_,k)=>{const i=((y+j)*f.width+x+k)*4;return Math.min(f.data[i],f.data[i+1],f.data[i+2])>190?'1':'0';}).join(''));
  const cols=Array.from({length:w},(_,i)=>rows.some(r=>r[i]==='1'));const l=cols.indexOf(true),r=cols.lastIndexOf(true);
@@ -28,7 +28,7 @@ export function editGrid(f:PixelFrame,a=editAnchor(f)):EditSlot[]|null{if(!a)ret
  const cx=a.x-98+(col===0?0:(row===0?56:51)+(col-1)*52),cy=a.y+[-291,-235,-183,-129][row];
  if(cx-24<0||cy-24<0||cx+24>=f.width||cy+24>=f.height)continue;
  let colorful=0;const sig:number[]=[];
- for(let iy=0;iy<8;iy++)for(let ix=0;ix<8;ix++){const x=Math.round(cx+(ix-3.5)*3.4),y=Math.round(cy+2+(iy-3.5)*3.4),i=(y*f.width+x)*4,r=f.data[i],g=f.data[i+1],b=f.data[i+2];if(Math.max(r,g,b)-Math.min(r,g,b)>45&&Math.max(r,g,b)>90)colorful++;sig.push((r>>5)*64+(g>>5)*8+(b>>5));}
+ for(let iy=0;iy<8;iy++)for(let ix=0;ix<8;ix++){const x=Math.round(cx+(row===0&&col!==0?-5:0)+(ix-3.5)*3.4),y=Math.round(cy+(row===0?(col===0?1:0):2)+(iy-3.5)*3.4),i=(y*f.width+x)*4,r=f.data[i],g=f.data[i+1],b=f.data[i+2];if(Math.max(r,g,b)-Math.min(r,g,b)>45&&Math.max(r,g,b)>90)colorful++;sig.push((r>>5)*64+(g>>5)*8+(b>>5));}
  if(colorful<16)continue;
  slots.push({id:row+':'+col,kind:col===0?'captain':'crew',x:cx-18,y:cy-20,w:42,h:42,selected:false,fingerprint:sig.join('.'),level:readIconLevel(f,cx,cy,row,col===0)});
  }return slots;
@@ -53,7 +53,7 @@ export function editShipHeader(f:PixelFrame,a:NonNullable<ReturnType<typeof edit
 }
 export function assignedCandidates(snapshot:Snapshot,slots:EditSlot[],ids:string[]){
  const assigned=slots.filter(s=>s.id.startsWith('0:'));
- const options=assigned.map(s=>({slot:s,ids:ids.filter(id=>portraitCandidates(snapshot,[s],[id]).length>0&&s.level!=null)}));
+ const options=assigned.map(s=>({slot:s,ids:assignedOptions(snapshot,s,ids)}));
  // Maximum bipartite matching; one recommendation cannot count twice.
  const used=new Map<string,EditSlot>();
  function visit(i:number,seen:Set<string>):boolean{
@@ -63,4 +63,15 @@ export function assignedCandidates(snapshot:Snapshot,slots:EditSlot[],ids:string
  }
  options.forEach((_,i)=>visit(i,new Set()));
  return [...used.entries()];
+}
+
+export function assignedOptions(snapshot:Snapshot,s:EditSlot,ids:string[]):string[]{
+ if(s.level==null)return [];
+ const eligible=Object.entries(snapshot.records).filter(([,o])=>o.kind===s.kind&&o.reading.level===s.level);
+ // Captain icons are generic. Level alone is only a compatibility check.
+ if(s.kind==='captain')return eligible.filter(([id])=>ids.includes(id)).map(([id])=>id);
+ const scores=eligible.map(([id,o])=>({id,name:o.reading.name.toUpperCase(),score:portraitScore(s.fingerprint,o.fingerprint)})).sort((a,b)=>b.score-a.score);
+ const top=scores[0];if(!top||top.score<40||scores.some(r=>r.name!==top.name&&r.score>=top.score-5))return [];
+ // Identical type and level can be interchangeable visually, not necessarily statistically.
+ return scores.filter(r=>r.name===top.name&&ids.includes(r.id)).map(r=>r.id);
 }

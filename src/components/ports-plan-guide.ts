@@ -31,7 +31,7 @@ export function mountPlanGuide(root:HTMLElement){
  const assigned=assignedCandidates(snapshot,edit,ids),remaining=ids.filter(id=>!assigned.some(([i])=>i===id));
  const pending=portraitCandidates(snapshot,edit.filter(s=>!s.id.startsWith('0:')),remaining);
  progress.value=assigned.length;count.textContent=assigned.length+'/'+ids.length+' coincidencias visuales asignadas (no identidades confirmadas) · fila superior: '+edit.filter(s=>s.id.startsWith('0:')).map(s=>s.id+' Nv '+(s.level??'?')).join(', ');
- status.textContent='Barco '+target.ship+' · '+edit.length+' retratos · '+edit.filter(s=>s.level!=null).length+' niveles · '+pending.length+' candidatos pendientes. Azul: asignado compatible; ámbar: disponible compatible.';
+ status.textContent='Barco '+target.ship+' · '+edit.length+' retratos · '+edit.filter(s=>s.level!=null).length+' niveles · '+pending.length+' candidatos pendientes. Azul: tipo y nivel compatibles (capitán: solo nivel); ámbar: disponible compatible.';
  showParts(null,header.totals);draw([...assigned.map(([,slot])=>({slot,color:0xff69a9ef})),...pending.map(slot=>({slot,color:0xffe9a94b}))]);return;
  }
  const a=findRosterAnchor(f);if(a&&a.scale===1){const slots=inspectGrid(f,a),exact=guideSlots(snapshot,slots,ids),provisional=exact.length!==ids.length,matches=provisional?portraitCandidates(snapshot,slots,ids):exact;draw(matches.map(slot=>({slot,color:provisional?0xffe9a94b:0xff45ef78})));status.textContent='Crew Roster · '+matches.length+' candidatos; abre Edit Crew del barco '+target.ship;return;}
