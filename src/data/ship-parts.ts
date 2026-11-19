@@ -14,7 +14,19 @@ export const parts:Part[]=[
 {name:'Polished Rudder',kind:'rudder',stats:[0,0,0,450]},
 {name:'Barnacled Hull',kind:'hull',stats:[50,50,100,0]},
 {name:'Golden Hull',kind:'hull',stats:[450,200,200,100]},
-{name:'Hull of Storms',kind:'hull',stats:[400,400,900,300]}
+{name:'Hull of Storms',kind:'hull',stats:[400,400,900,300]},
+{name:'War Hull',kind:'hull',stats:[400,900,400,300]},
+{name:'Intrepid Figurehead',kind:'ram',stats:[600,0,0,0]},
+{name:'War Ram',kind:'ram',stats:[0,600,0,0]},
+{name:'Inspiring Figurehead',kind:'ram',stats:[800,0,0,0]},
+{name:'Eastern Artefacts',kind:'deck',stats:[1000,0,0,0]},
+{name:'Whaleskin Rigging',kind:'deck',stats:[0,0,1200,0]},
+{name:'Gilded Rudder',kind:'rudder',stats:[0,0,0,650]},
+{name:'Enchanted Rudder',kind:'rudder',stats:[0,0,0,1000]},
+{name:'Skeletal Rudder',kind:'rudder',stats:[0,0,0,1200]},
+{name:'Rudder that Parts the Seas',kind:'rudder',stats:[0,0,0,1800]},
+{name:'Hull of Glory',kind:'hull',stats:[1200,500,500,400]},
+{name:'Storm Rider Hull',kind:'hull',stats:[500,500,1200,400]}
 ];
 export const partKinds:PartKind[]=['ram','deck','deck','rudder','hull'];
 export const partSources=['https://www.runehq.com/minigame/player-owned-ports','https://runescape.fandom.com/wiki/Player-owned_port/Ship_upgrades','https://runescape.wiki/w/Player-owned_port'];
