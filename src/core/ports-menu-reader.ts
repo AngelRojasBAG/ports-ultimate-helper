@@ -1,3 +1,4 @@
+import {decodeVoyageNumber} from './voyage-number';
 import {fromHex,crop,readShipNumber} from './ship-visual-reader';
 import type {Frame,Mask} from './ports-text-patterns';
 const headers=[
@@ -32,7 +33,7 @@ export function readVoyageList(f:Frame){
  const a=findGold(f,voyageHeader);if(!a)return null;const dx=a.x-405,dy=a.y-70;
  if(535+dx<0||95+dy<0||815+dx>f.width||465+dy>f.height)return null;
  const titleMask=crop(f,458+dx,95+dy,355,22,true);const nameKey=maskKey(crop(f,560+dx,95+dy,155,22,true)),name=nameKey==='122x10:6d6acd4e'?'FIRST CONTACT':null;
- const read=(x:number,y:number)=>{const m=crop(f,x+dx,y+dy,40,20,false,160),key=maskKey(m);return {value:knownNumbers[key]??readShipNumber(m),blank:!m,mask:key};};
+ const read=(x:number,y:number)=>{const masks=[160,100,130].map(t=>crop(f,x+dx,y+dy,40,20,false,t));const key=maskKey(masks[0]);const values=[...new Set(masks.flatMap(m=>[knownNumbers[maskKey(m)],readShipNumber(m),decodeVoyageNumber(m)]).filter((n):n is number=>typeof n==='number'))];return {value:values.length===1?values[0]:null,blank:masks.every(m=>!m),mask:key,patterns:masks};};
  const totals=[382,414,445].map(y=>read(535,y));
  const requirements=[383,414,445].map(y=>read(763,y));
  return {name,titleMask,totals:totals.map(r=>r.value),requirements:requirements.map(r=>r.blank?0:r.value),diagnostics:{nameKey,totals,requirements},anchor:a};
