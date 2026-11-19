@@ -27,7 +27,7 @@ export function readPartMenu(f:Frame){
  return {name:entry?.[0]===category?entry[1]:null,state:classifyBadge(g,o,w),mask:key,badge:[g,o,w]};});
  return {category,rows,anchor:a,partial:true};}return null;
 }
-const voyageNames:Record<string,string>={'122x10:6d6acd4e':'FIRST CONTACT','34x10:9506cec4':'I SPY','126x10:cfff2162':'BUILDING PLANS'};
+const voyageNames:Record<string,string>={"166x10:0d1eca1c":"PLEASING TO THE EYE","197x10:7aeadc62":"A VOYAGE OF DISCOVERY",'122x10:6d6acd4e':'FIRST CONTACT','34x10:9506cec4':'I SPY','126x10:cfff2162':'BUILDING PLANS'};
 // Exact glyph matching; unknown or ambiguous titles remain null.
 const voyageGlyphs=new Map<string,Set<string>>();
 function addVoyageGlyphs(name:string,w:number,bits:string,ranges:[number,number][]){
@@ -60,8 +60,8 @@ const voyageHeader=fromHex(89,'1c70f1c60807c7c0e0e1cff,c6318c40c1846006062018,c4
 const knownNumbers:Record<string,number>={'26x9:90cee157':6500,'24x9:cf833837':5171,'20x9:dcfd3ad8':204,'20x9:0d05d380':214};
 export function readVoyageList(f:Frame){
  const a=findGold(f,voyageHeader);if(!a)return null;const dx=a.x-405,dy=a.y-70;
- if(535+dx<0||95+dy<0||815+dx>f.width||465+dy>f.height)return null;
- const titleMask=crop(f,458+dx,95+dy,355,22,true);const nameKey=maskKey(crop(f,560+dx,95+dy,155,22,true)),name=voyageNames[maskKey(titleMask)]??voyageNames[nameKey]??decodeVoyageTitle(titleMask);
+ if(458+dx<0||95+dy<0||815+dx>f.width||465+dy>f.height)return null;
+ const titleMask=crop(f,458+dx,95+dy,355,22,true);const nameKey=maskKey(titleMask),name=voyageNames[nameKey]??decodeVoyageTitle(titleMask);
  const read=(x:number,y:number)=>{const masks=[160,100,130].map(t=>crop(f,x+dx,y+dy,40,20,false,t));const key=maskKey(masks[0]);const values=[...new Set(masks.flatMap(m=>[knownNumbers[maskKey(m)],readShipNumber(m),decodeVoyageNumber(m)]).filter((n):n is number=>typeof n==='number'))];return {value:values.length===1?values[0]:null,blank:masks.every(m=>!m),mask:key,patterns:masks};};
  const totals=[382,414,445].map(y=>read(535,y));
  const requirements=[383,414,445].map(y=>read(763,y));
