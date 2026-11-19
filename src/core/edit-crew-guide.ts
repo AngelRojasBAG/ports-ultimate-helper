@@ -15,7 +15,7 @@ export function editAnchor(f:PixelFrame){
 // Eight-pixel white level glyphs measured from the Edit Crew PNG of 19 Nov.
 const levelMasks:Record<number,string>={3:'0110/1001/0001/0110/0001/0001/1001/0110',5:'1111/1000/1000/1110/0001/0001/1001/0110',6:'00110/01001/10000/10110/11001/10001/10001/01110',7:'1111/0001/0010/0010/0100/0100/1000/1000',8:'01110/10001/10001/01110/10001/10001/10001/01110'};
 export function readIconLevel(f:PixelFrame,cx:number,cy:number,row:number,captain:boolean):number|null{
- const x=cx+(captain?9:13),y=cy+(row===0?6:row===3?7:9),w=captain?14:10;
+ const x=cx+(captain?9:13),y=cy+(row===0?9:row===3?7:9),w=captain?14:10;
  if(x<0||y<0||x+w>f.width||y+8>f.height)return null;
  const rows=Array.from({length:8},(_,j)=>Array.from({length:w},(_,k)=>{const i=((y+j)*f.width+x+k)*4;return Math.min(f.data[i],f.data[i+1],f.data[i+2])>190?'1':'0';}).join(''));
  const cols=Array.from({length:w},(_,i)=>rows.some(r=>r[i]==='1'));const l=cols.indexOf(true),r=cols.lastIndexOf(true);
@@ -25,7 +25,7 @@ export function readIconLevel(f:PixelFrame,cx:number,cy:number,row:number,captai
 export type EditSlot=Slot&{level?:number|null};
 export function editGrid(f:PixelFrame,a=editAnchor(f)):EditSlot[]|null{if(!a)return null;const slots:EditSlot[]=[];
  for(let row=0;row<4;row++)for(let col=0;col<6;col++){
- const cx=a.x-98+(col===0?0:51+(col-1)*52),cy=a.y+[-291,-235,-183,-129][row];
+ const cx=a.x-98+(col===0?0:(row===0?56:51)+(col-1)*52),cy=a.y+[-291,-235,-183,-129][row];
  if(cx-24<0||cy-24<0||cx+24>=f.width||cy+24>=f.height)continue;
  let colorful=0;const sig:number[]=[];
  for(let iy=0;iy<8;iy++)for(let ix=0;ix<8;ix++){const x=Math.round(cx+(ix-3.5)*3.4),y=Math.round(cy+2+(iy-3.5)*3.4),i=(y*f.width+x)*4,r=f.data[i],g=f.data[i+1],b=f.data[i+2];if(Math.max(r,g,b)-Math.min(r,g,b)>45&&Math.max(r,g,b)>90)colorful++;sig.push((r>>5)*64+(g>>5)*8+(b>>5));}

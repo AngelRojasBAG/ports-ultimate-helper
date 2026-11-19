@@ -30,7 +30,7 @@ export function mountPlanGuide(root:HTMLElement){
  const header=editShipHeader(f,ea);if(header.id!==target.ship||header.name!==target.name){clear();progress.value=0;count.textContent='Asignación no comprobada';status.textContent='Barco objetivo '+target.ship+' · '+target.name+'; abierto: '+(header.id??'?')+' · '+(header.name??'no reconocido')+'. Marcos suspendidos.';showParts(null,null);return;}
  const assigned=assignedCandidates(snapshot,edit,ids),remaining=ids.filter(id=>!assigned.some(([i])=>i===id));
  const pending=portraitCandidates(snapshot,edit.filter(s=>!s.id.startsWith('0:')),remaining);
- progress.value=assigned.length;count.textContent=assigned.length+'/'+ids.length+' coincidencias visuales asignadas (no identidades confirmadas)';
+ progress.value=assigned.length;count.textContent=assigned.length+'/'+ids.length+' coincidencias visuales asignadas (no identidades confirmadas) · fila superior: '+edit.filter(s=>s.id.startsWith('0:')).map(s=>s.id+' Nv '+(s.level??'?')).join(', ');
  status.textContent='Barco '+target.ship+' · '+edit.length+' retratos · '+edit.filter(s=>s.level!=null).length+' niveles · '+pending.length+' candidatos pendientes. Azul: asignado compatible; ámbar: disponible compatible.';
  showParts(null,header.totals);draw([...assigned.map(([,slot])=>({slot,color:0xff69a9ef})),...pending.map(slot=>({slot,color:0xffe9a94b}))]);return;
  }
