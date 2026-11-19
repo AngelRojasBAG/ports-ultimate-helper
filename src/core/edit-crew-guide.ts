@@ -23,7 +23,17 @@ export function editGrid(f:PixelFrame):Slot[]|null{
  slots.push({id:row+':'+col,kind:col===0?'captain':'crew',x:cx-18,y:cy-20,w:42,h:42,selected:false,fingerprint:sig.join('.')});
  }return slots;
 }
+export function portraitScore(a:string,b:string){
+ if(a===b)return 64;
+ const x=a.split('.'),y=b.split('.');return x.length===64&&y.length===64?x.filter((v,i)=>v===y[i]).length:0;
+}
 export function portraitCandidates(snapshot:Snapshot,slots:Slot[],ids:string[]){
- const wanted=ids.flatMap(id=>snapshot.records[id]?[snapshot.records[id]]:[]);
- return slots.filter(s=>wanted.some(o=>{if(o.kind!==s.kind)return false;if(o.fingerprint===s.fingerprint)return true;const a=s.fingerprint.split('.'),b=o.fingerprint.split('.');return a.length===64&&b.length===64&&a.filter((v,i)=>v===b[i]).length>=48;}));
+ const all=Object.entries(snapshot.records);
+ return slots.filter(s=>{
+  const ranked=all.filter(([,o])=>o.kind===s.kind).map(([id,o])=>({id,score:portraitScore(s.fingerprint,o.fingerprint)})).sort((a,b)=>b.score-a.score);
+  const best=ranked[0];if(!best||best.score<48)return false;
+  // Compare against non-recommended portraits too. Do not highlight a clearly better non-target match.
+  const wanted=ranked.filter(r=>ids.includes(r.id));if(!wanted.length||wanted[0].score<best.score-1)return false;
+  return true;
+ });
 }
