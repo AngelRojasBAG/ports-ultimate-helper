@@ -23,9 +23,10 @@ export function mountVerifiedRoster(sec:HTMLElement){
   for(const s of (slots.length?slots:last?.grid??[])){const cell=document.createElement('span');cell.className=records[s.id]?'sync-done':'sync-pending';cell.textContent=s.id;cell.title=records[s.id]?.reading.name??'Pendiente';grid.append(cell);}
   updateManager(last,!!slots.length&&n===Object.keys(last?.records??{}).length);
  }
- let drawnKey='',drawnAt=0;
+ let drawnKey='',drawnAt=0,guideActive=false;
+ window.addEventListener('ports-plan-guide-active',e=>{guideActive=!!(e as CustomEvent<boolean>).detail;clear();drawnKey='';if(!guideActive)draw();});
  function draw(){
-  scaleInfo.textContent='DPI navegador: '+window.devicePixelRatio+' · divisor aplicado: '+scale();const api=window.alt1;if(!overlay.checked||!enabled.checked||!api?.permissionOverlay||!api.overLaySetGroup){clear();drawnKey='';return;}
+  scaleInfo.textContent='DPI navegador: '+window.devicePixelRatio+' · divisor aplicado: '+scale();const api=window.alt1;if(guideActive||!overlay.checked||!enabled.checked||!api?.permissionOverlay||!api.overLaySetGroup){clear();drawnKey='';return;}
   const signature=JSON.stringify([scale(),slots.map(s=>[s.id,s.x,s.y,s.w,s.h,!!matchingRecords(last,slots)[s.id]])]);
   if(signature===drawnKey&&performance.now()-drawnAt<2400)return;
   clear();drawnKey=signature;drawnAt=performance.now();
