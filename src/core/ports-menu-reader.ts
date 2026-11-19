@@ -27,12 +27,41 @@ export function readPartMenu(f:Frame){
  return {name:entry?.[0]===category?entry[1]:null,state:classifyBadge(g,o,w),mask:key,badge:[g,o,w]};});
  return {category,rows,anchor:a,partial:true};}return null;
 }
+const voyageNames:Record<string,string>={'122x10:6d6acd4e':'FIRST CONTACT','34x10:9506cec4':'I SPY','126x10:cfff2162':'BUILDING PLANS'};
+// Exact glyph matching; unknown or ambiguous titles remain null.
+const voyageGlyphs=new Map<string,Set<string>>();
+function addVoyageGlyphs(name:string,w:number,bits:string,ranges:[number,number][]){
+ const letters=name.replace(/ /g,'');
+ if(bits.length!==w*10||letters.length!==ranges.length)throw new Error('Invalid voyage glyph sample');
+ ranges.forEach(([l,r],i)=>{const key=(r-l+1)+':'+Array.from({length:10},(_,y)=>bits.slice(y*w+l,y*w+r+1)).join('');const values=voyageGlyphs.get(key)??new Set<string>();values.add(letters[i]);voyageGlyphs.set(key,values);});
+}
+addVoyageGlyphs('I SPY',34,'1100000000111100011011100011000011110000000100000001100010000100001011000000010000000110001100011000001100000001100000011000100000100100110000000111100001100010000011100011000000000111000110010000000110001100000000001100011000000000011000110000000000010001100000000001100011000000000001000110000000000110001100000001111000011000000000011000',[[0,1],[9,13],[17,23],[26,33]]);
+addVoyageGlyphs('BUILDING PLANS',126,'110110000110000010001100011000000011111110000011000100000001000001111110000000011011100011000000000001000000010000000100001111110011000110000010001100011000000011000011100011000110000001000010000000000000011000100011000000000001000000011000000100010000110001000110000010001100011000000011000001100011000111000001000100000000000000011000110011000000000011100000011100000100010000110010000110000010001100011000000011000000110011000101100001001100000000000000011000100011000000000011100000010110000100011000110110000110000010001100011000000011000000110011000100110001001100000000000000011000100011000000000100110000010011000100011110110011000110000010001100011000000011000000110011000100011001001100000011000000011001000011000000000100110000010001100100000111110001100110000010001100011000000011000000110011000100001101001100000011000000011000000011000000000111110000010000110100000011110001100110000010001100011000000011000000100011000100000111000110000011000000011000000011000000001000011000010000011100000001110001100010000100001100011000000011000001100011000100000011000011000011000000011000000011000000001000011000010000001100000001111110000001111000001100011111100011111110000011000100000001000000111110000000011000000011111100011000001100010000000100011110',[[0,6],[9,16],[20,21],[25,30],[34,43],[46,47],[51,59],[62,71],[79,85],[88,93],[97,105],[109,117],[121,125]]);
+export function decodeVoyageTitle(m:Mask|null):string|null{
+ if(!m||m.h!==10||m.w>355||m.bits.length!==m.w*m.h)return null;
+ const empty=(x:number)=>Array.from({length:10},(_,y)=>m.bits[y*m.w+x]).every(v=>v==='0');
+ const memo=new Map<number,string[]>();
+ function walk(pos:number):string[]{
+ if(memo.has(pos))return memo.get(pos)!;
+ let x=pos;while(x<m!.w&&empty(x))x++;
+ if(x===m!.w)return [''];
+ const found=new Set<string>();
+ for(let w=1;w<=12&&x+w<=m!.w;w++){
+ const key=w+':'+Array.from({length:10},(_,y)=>m!.bits.slice(y*m!.w+x,y*m!.w+x+w)).join('');
+ const letters=voyageGlyphs.get(key);if(!letters)continue;
+ for(const letter of letters)for(const tail of walk(x+w)){found.add((pos>0&&x-pos>=7?' ':'')+letter+tail);if(found.size>1)break;}
+ if(found.size>1)break;
+ }
+ const result=[...found];memo.set(pos,result);return result;
+ }
+ const values=walk(0);return values.length===1&&values[0]?values[0]:null;
+}
 const voyageHeader=fromHex(89,'1c70f1c60807c7c0e0e1cff,c6318c40c1846006062018,c4208480c1006006062018,4460c68143006006063018,6860c30163007c06061c18,6860c303e30c6006060c18,30608302330c6006060418,30318306318c6006064418,e0306187c7c07c67818');
 const knownNumbers:Record<string,number>={'26x9:90cee157':6500,'24x9:cf833837':5171,'20x9:dcfd3ad8':204,'20x9:0d05d380':214};
 export function readVoyageList(f:Frame){
  const a=findGold(f,voyageHeader);if(!a)return null;const dx=a.x-405,dy=a.y-70;
  if(535+dx<0||95+dy<0||815+dx>f.width||465+dy>f.height)return null;
- const titleMask=crop(f,458+dx,95+dy,355,22,true);const nameKey=maskKey(crop(f,560+dx,95+dy,155,22,true)),name=nameKey==='122x10:6d6acd4e'?'FIRST CONTACT':null;
+ const titleMask=crop(f,458+dx,95+dy,355,22,true);const nameKey=maskKey(crop(f,560+dx,95+dy,155,22,true)),name=voyageNames[maskKey(titleMask)]??voyageNames[nameKey]??decodeVoyageTitle(titleMask);
  const read=(x:number,y:number)=>{const masks=[160,100,130].map(t=>crop(f,x+dx,y+dy,40,20,false,t));const key=maskKey(masks[0]);const values=[...new Set(masks.flatMap(m=>[knownNumbers[maskKey(m)],readShipNumber(m),decodeVoyageNumber(m)]).filter((n):n is number=>typeof n==='number'))];return {value:values.length===1?values[0]:null,blank:masks.every(m=>!m),mask:key,patterns:masks};};
  const totals=[382,414,445].map(y=>read(535,y));
  const requirements=[383,414,445].map(y=>read(763,y));
