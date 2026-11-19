@@ -1,4 +1,4 @@
-import {fromHex} from './ship-visual-reader';
+import {fromHex,readShipHeader} from './ship-visual-reader';
 import type {PixelFrame} from './roster-anchor';
 import type {Slot} from './crew-grid';
 import type {Snapshot} from './sync-storage';
@@ -23,8 +23,7 @@ export function readIconLevel(f:PixelFrame,cx:number,cy:number,row:number,captai
  const match=Object.entries(levelMasks).find(([,v])=>v===key);return match?Number(match[0]):null;
 }
 export type EditSlot=Slot&{level?:number|null};
-export function editGrid(f:PixelFrame):EditSlot[]|null{
- const a=editAnchor(f);if(!a)return null;const slots:EditSlot[]=[];
+export function editGrid(f:PixelFrame,a=editAnchor(f)):EditSlot[]|null{if(!a)return null;const slots:EditSlot[]=[];
  for(let row=0;row<4;row++)for(let col=0;col<6;col++){
  const cx=a.x-98+(col===0?0:51+(col-1)*52),cy=a.y+[-291,-235,-183,-129][row];
  if(cx-24<0||cy-24<0||cx+24>=f.width||cy+24>=f.height)continue;
@@ -47,4 +46,21 @@ export function portraitCandidates(snapshot:Snapshot,slots:EditSlot[],ids:string
   const wanted=ranked.filter(r=>ids.includes(r.id));if(!wanted.length||wanted[0].score<best.score-1)return false;
   return true;
  });
+}
+
+export function editShipHeader(f:PixelFrame,a:NonNullable<ReturnType<typeof editAnchor>>){
+ return readShipHeader(f,{x:a.x+7,y:a.y-345});
+}
+export function assignedCandidates(snapshot:Snapshot,slots:EditSlot[],ids:string[]){
+ const assigned=slots.filter(s=>s.id.startsWith('0:'));
+ const options=assigned.map(s=>({slot:s,ids:ids.filter(id=>portraitCandidates(snapshot,[s],[id]).length>0&&s.level!=null)}));
+ // Maximum bipartite matching; one recommendation cannot count twice.
+ const used=new Map<string,EditSlot>();
+ function visit(i:number,seen:Set<string>):boolean{
+  for(const id of options[i].ids){if(seen.has(id))continue;seen.add(id);const previous=used.get(id);
+   if(!previous||visit(options.findIndex(o=>o.slot.id===previous.id),seen)){used.set(id,options[i].slot);return true;}
+  }return false;
+ }
+ options.forEach((_,i)=>visit(i,new Set()));
+ return [...used.entries()];
 }

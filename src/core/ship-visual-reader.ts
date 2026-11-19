@@ -78,15 +78,17 @@ export function identifyPart(f:Frame,slot:number,dx:number,dy:number){
  return ranked[0]&&ranked[0][1]>=.94&&ranked[0][1]-(ranked[1]?.[1]??0)>=.15?ranked[0][0]:null;
 }
 
-export function readShip(f:Frame){
- const a=findAnchor(f,anchor)??findAnchor(f,underwayAnchor);if(!a)return null;const dx=a.x-968,dy=a.y-227;
+export function readShipHeader(f:Frame,a:{x:number;y:number}){const dx=a.x-968,dy=a.y-227;
  const idIndex=ids.findIndex(m=>same(crop(f,836+dx,146+dy,19,19),m));
  const name=names.find(([,m])=>same(crop(f,875+dx,145+dy,265,20,true),m))?.[0]??null;
  const totals=[[950,170,40,16],[950,190,40,16],[1088,170,32,16],[1088,190,32,16]].map(([x,y,w,h])=>readShipNumber(crop(f,x+dx,y+dy,w,h)));
+ return {id:idIndex<0?null:idIndex+1,name,totals};
+}
+export function readShip(f:Frame){const a=findAnchor(f,anchor)??findAnchor(f,underwayAnchor);if(!a)return null;const dx=a.x-968,dy=a.y-227;const header=readShipHeader(f,a);
  const underway=same(crop(f,925+dx,306+dy,165,24),underwayText);
  const available=!underway&&!!findAnchor(f,anchor);
  const state=underway?'underway':available?'available':'unknown';
- return {id:idIndex<0?null:idIndex+1,name,totals,components:partBoxes.map((_,i)=>available?identifyPart(f,i,dx,dy):null),state,anchor:a};
+ return {...header,components:partBoxes.map((_,i)=>available?identifyPart(f,i,dx,dy):null),state,anchor:a};
 }
 export function readVoyage(f:Frame){
  const a=findAnchor(f,voyageAnchor);if(!a)return null;
