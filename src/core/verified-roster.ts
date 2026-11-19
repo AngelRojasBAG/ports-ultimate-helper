@@ -27,7 +27,9 @@ export function matchingRecords(saved:Snapshot|null,slots:Slot[]):Records{
 }
 export function saveVerified(store:Storage,slots:Slot[],slot:Slot,rows:ReadRow[]){
  const o=observationFromRows(slot,rows);if(!o)return null;
- const old=readVerified(store),records=matchingRecords(old,slots);
+ const old=readVerified(store),archiveKey=SYNC_KEY+'.identity-archive';const records=matchingRecords(old,slots);
+ if(old&&Object.keys(old.records).length===old.grid.length&&old.grid.length>0){const existingArchive=store.getItem(archiveKey);if(!existingArchive||Object.keys(records).length===old.grid.length)store.setItem(archiveKey,JSON.stringify(old));}
+ // Keep original records recoverable; never promote provisional remaps to verified.
  const next=snapshot({...records,[slot.id]:o},slots);
  const prior=store.getItem(SYNC_KEY);
  if(prior)store.setItem(SYNC_KEY+'.previous',prior);

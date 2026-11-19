@@ -30,10 +30,10 @@ const voyageHeader=fromHex(89,'1c70f1c60807c7c0e0e1cff,c6318c40c1846006062018,c4
 const knownNumbers:Record<string,number>={'26x9:90cee157':6500,'24x9:cf833837':5171,'20x9:dcfd3ad8':204,'20x9:0d05d380':214};
 export function readVoyageList(f:Frame){
  const a=findGold(f,voyageHeader);if(!a)return null;const dx=a.x-405,dy=a.y-70;
- if(535+dx<0||95+dy<0||803+dx>f.width||465+dy>f.height)return null;
- const nameKey=maskKey(crop(f,560+dx,95+dy,155,22,true)),name=nameKey==='122x10:6d6acd4e'?'FIRST CONTACT':null;
+ if(535+dx<0||95+dy<0||815+dx>f.width||465+dy>f.height)return null;
+ const titleMask=crop(f,458+dx,95+dy,355,22,true);const nameKey=maskKey(crop(f,560+dx,95+dy,155,22,true)),name=nameKey==='122x10:6d6acd4e'?'FIRST CONTACT':null;
  const read=(x:number,y:number)=>{const m=crop(f,x+dx,y+dy,40,20,false,160),key=maskKey(m);return {value:knownNumbers[key]??readShipNumber(m),blank:!m,mask:key};};
  const totals=[382,414,445].map(y=>read(535,y));
  const requirements=[383,414,445].map(y=>read(763,y));
- return {name,totals:totals.map(r=>r.value),requirements:requirements.map(r=>r.blank?0:r.value),diagnostics:{nameKey,totals,requirements},anchor:a};
+ return {name,titleMask,totals:totals.map(r=>r.value),requirements:requirements.map(r=>r.blank?0:r.value),diagnostics:{nameKey,totals,requirements},anchor:a};
 }
