@@ -1,0 +1,4 @@
+import {it,expect} from 'vitest';import {maskKey,classifyBadge,findGold} from '../src/core/ports-menu-reader';import {fromHex} from '../src/core/ship-visual-reader';
+it('distinguishes measured status signatures and rejects unexpected ones',()=>{expect(classifyBadge(27,0,1)).toBe('equipped');expect(classifyBadge(0,0,0)).toBe('available');expect(classifyBadge(0,61,15)).toBe('locked-gold');expect(classifyBadge(0,0,48)).toBe('locked-grey');expect(classifyBadge(1,0,0)).toBe('unknown');});
+it('has deterministic observed requirement mask',()=>{expect(maskKey(fromHex(26,'c7870e,1040912,2040891,2c78891,220c891,2204891,2204891,2608912,1c7870e'))).toBe('26x9:90cee157');});
+it('finds translated gold heading',()=>{const f={width:10,height:10,data:new Uint8ClampedArray(400)},m=fromHex(3,'5,2,7');for(let y=0;y<3;y++)for(let x=0;x<3;x++)if(m.bits[y*3+x]==='1')f.data.set([220,180,90,255],((y+4)*10+x+2)*4);expect(findGold(f,m)).toEqual({x:2,y:4});});
